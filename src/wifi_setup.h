@@ -261,7 +261,7 @@ inline void show_setup_screen(const char* esp32_ip, const char* access_point_pas
 
 inline bool setup_wifi()
 {
-    WiFiClass::mode(WIFI_STA);
+    WiFi.mode(WIFI_MODE_STA);
 
     preferences.begin("display_thing", false);
     const String ssid = preferences.getString("ssid", "");
@@ -293,10 +293,11 @@ inline bool setup_wifi()
         Serial.println("Failed to connect to saved WiFi network.");
     }
 
-    const auto access_point_password = String(random(1000, 10000));
+    const auto access_point_password = String(random(10000000, 100000000)); // random 8 digit password
     const auto esp32_ip = IPAddress(100, 100, 100, 100);
 
-    WiFi.softAP(access_point_ssid, access_point_password);
+    WiFi.mode(WIFI_MODE_AP);
+    WiFi.softAP(access_point_ssid, access_point_password, 1, false, 1);
     WiFi.softAPConfig(esp32_ip, esp32_ip, IPAddress(255, 255, 255, 0));
     dnsServer.start(53, "*", esp32_ip);
 
