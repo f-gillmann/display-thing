@@ -1,9 +1,13 @@
 #include <Arduino.h>
 #include "config.h"
 #include "globals.h"
+#include "screens/temp/TempScreen.h"
 #include "wifi_config/WifiConfigManager.h"
 
 bool isConnected = false;
+bool first_draw_done = false;
+constexpr long updateInterval = 30000;
+unsigned long lastUpdate = 0;
 
 void setup()
 {
@@ -36,7 +40,12 @@ void loop()
 {
     if (isConnected)
     {
-
+        if (!first_draw_done || (millis() - lastUpdate > updateInterval))
+        {
+            show_temp_screen();
+            lastUpdate = millis();
+            first_draw_done = true;
+        }
     }
     else
     {
