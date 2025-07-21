@@ -1,14 +1,16 @@
-#include "WifiConfigDisplay.h"
+#include "WiFiSetupScreen.h"
 
 #include <qrcode.h>
+#include <utility>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h>
-#include "../globals.h"
+#include "display/DisplayManager.h"
 
 static void draw_qr_code(const esp_qrcode_handle_t qrcode)
 {
+    auto& display = displayThing.getDisplay();
     const int size = esp_qrcode_get_size(qrcode);
 
     if (size <= 0)
@@ -22,23 +24,32 @@ static void draw_qr_code(const esp_qrcode_handle_t qrcode)
     const int offsetX = (display.width() - scaledSize) / 2 + display.width() / 4;
     const int offsetY = (display.height() - scaledSize) / 2 - 25;
 
-    for (int qr_y = 0; qr_y < size; qr_y++)
+    for (int y = 0; y < size; y++)
     {
-        for (int qr_x = 0; qr_x < size; qr_x++)
+        for (int x = 0; x < size; x++)
         {
-            if (esp_qrcode_get_module(qrcode, qr_x, qr_y))
+            if (esp_qrcode_get_module(qrcode, x, y))
             {
                 display.fillRect(
-                    static_cast<int16_t>(offsetX + qr_x * scale), static_cast<int16_t>(offsetY + qr_y * scale),
-                    scale, scale, GxEPD_BLACK
+                    static_cast<int16_t>(offsetX + x * scale),
+                    static_cast<int16_t>(offsetY + y * scale),
+                    scale,
+                    scale,
+                    GxEPD_BLACK
                 );
             }
         }
     }
 }
 
-void show_setup_screen(const char* esp32_ip, const char* access_point_password)
+WiFiSetupScreen::WiFiSetupScreen(std::string ap_password) : access_point_password(std::move(ap_password))
 {
+}
+
+void WiFiSetupScreen::show(DisplayThing& displayThing)
+{
+    auto& display = displayThing.getDisplay();
+
     display.setFullWindow();
     display.firstPage();
 
@@ -84,14 +95,14 @@ void show_setup_screen(const char* esp32_ip, const char* access_point_password)
         display.setFont(&FreeSansBold12pt7b);
         display.setCursor(margin + 25, 345);
         display.print("http://");
-        display.print(esp32_ip);
+        display.print(ACCESS_POINT_IP);
 
         // --- right side
         auto qrcode_config = ESP_QRCODE_CONFIG_DEFAULT();
         qrcode_config.display_func = &draw_qr_code;
 
-        String network_payload = "WIFI:T:WPA;S:" + String(ACCESS_POINT_SSID) + ";P:" + String(access_point_password) +
-            ";;";
+        String network_payload = "WIFI:T:WPA;S:" + String(ACCESS_POINT_SETUP_SSID) + ";P:" + access_point_password.
+            c_str() + ";;";
         const esp_err_t qrcode_error = esp_qrcode_generate(&qrcode_config, network_payload.c_str());
 
         if (qrcode_error != ESP_OK)
@@ -100,23 +111,23 @@ void show_setup_screen(const char* esp32_ip, const char* access_point_password)
         }
 
         // credentials for access point
-        const int16_t wifi_credentials_x = center_x + 75;
-        int16_t wifi_credentials_y = display.height() - 75;
+        const auto wifi_credentials_x = static_cast<int16_t>(center_x + 75);
+        auto wifi_credentials_y = static_cast<int16_t>(display.height() - 75);
 
         display.setFont(&FreeSans9pt7b);
         display.setCursor(wifi_credentials_x, wifi_credentials_y);
         display.print("Network: ");
         display.setFont(&FreeSansBold9pt7b);
-        display.setCursor(wifi_credentials_x + 100, wifi_credentials_y);
-        display.print(ACCESS_POINT_SSID);
+        display.setCursor(static_cast<int16_t>(wifi_credentials_x + 100), wifi_credentials_y);
+        display.print(ACCESS_POINT_SETUP_SSID);
 
         wifi_credentials_y += 35;
         display.setFont(&FreeSans9pt7b);
         display.setCursor(wifi_credentials_x, wifi_credentials_y);
         display.print("Password: ");
         display.setFont(&FreeSansBold9pt7b);
-        display.setCursor(wifi_credentials_x + 100, wifi_credentials_y);
-        display.print(access_point_password);
+        display.setCursor(static_cast<int16_t>(wifi_credentials_x + 100), wifi_credentials_y);
+        display.print(access_point_password.c_str());
     }
     while (display.nextPage());
 

@@ -14,4 +14,9 @@
 #define EPD_SCK   EPD_CLK
 
 // Wifi
-const auto ACCESS_POINT_SSID = "display_thing";
+constexpr auto ACCESS_POINT_SETUP_SSID = "display_thing";
+const IPAddress ACCESS_POINT_IP(10, 10, 10, 10);
+
+// Preferences namespaces
+constexpr auto PREFERENCES_WIFI_CONFIG = "wifi_config";
+constexpr auto PREFERENCES_DEVICE_CONFIG = "device_config";

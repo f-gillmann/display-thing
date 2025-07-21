@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DisplayThing Configuration</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        :root {
+            --base: #24273a;
+            --mantle: #1e2030;
+            --crust: #181926;
+            --text: #cad3f5;
+            --subtext0: #a5adce;
+            --subtext1: #b8c0e0;
+            --overlay2: #939ab7;
+            --surface0: #363a4f;
+            --surface1: #494d64;
+            --blue: #8aadf4;
+            --mauve: #c6a0f6;
+            --sapphire: #7dc4e4;
+        }
+
+        html {
+            box-sizing: border-box;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--base);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem 0;
+        }
+
+        .container {
+            background-color: var(--mantle);
+            padding: 2rem 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 450px;
+        }
+
+        h1 {
+            color: var(--mauve);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: var(--subtext1);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group > label {
+            display: block;
+            color: var(--subtext0);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type='text'],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--surface0);
+            border: 1px solid var(--surface1);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: border-color 0.2s ease-in-out;
+            appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238aadf4' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        input[type='text']::placeholder {
+            color: var(--overlay2);
+        }
+
+        input[type='text']:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--blue);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-group div {
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-group label {
+            color: var(--text);
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        input[type="radio"] {
+            appearance: none;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.25em;
+            height: 1.25em;
+            border: 1px solid var(--surface1);
+            border-radius: 50%;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease-in-out;
+        }
+
+        input[type="radio"]::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            background-color: var(--blue);
+        }
+
+        input[type="radio"]:checked {
+            border-color: var(--blue);
+        }
+
+        input[type="radio"]:checked::before {
+            transform: scale(1);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--blue);
+            color: var(--crust);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: var(--sapphire);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>General Configuration</h1>
+    <p>Adjust the device settings below.</p>
+    <form action='/save_config' method='POST'>
+
+        <div class="form-group">
+            <label for="interval">Update Interval</label>
+            <select id="interval" name="interval">
+                <option value="30000" selected>30 seconds</option>
+                <option value="60000">60 seconds</option>
+                <option value="90000">90 seconds</option>
+                <option value="12000">120 seconds</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="open-meteo-api-key">Open-Meteo API key</label>
+            <input type="text" id="open-meteo-api-key" name="open-meteo-api-key" placeholder="Enter Open-Meteo API Key">
+        </div>
+
+        <div class="form-group">
+            <label>Units</label>
+            <div class="radio-group">
+                <div>
+                    <input type="radio" id="metric" name="units" value="metric" checked>
+                    <label for="metric">Metric</label>
+                </div>
+                <div>
+                    <input type="radio" id="imperial" name="units" value="imperial">
+                    <label for="imperial">Imperial</label>
+                </div>
+            </div>
+        </div>
+
+        <button type='submit'>Save Settings</button>
+    </form>
+</div>
+</body>
+</html>
