@@ -4,6 +4,7 @@
 #include <Preferences.h>
 #include "web/configuration_portal.html.h"
 #include "config.h"
+#include "display/DisplayManager.h"
 
 ConfigurationManager::ConfigurationManager(DisplayThing& displayThing) : displayThing(displayThing)
 {
@@ -20,9 +21,10 @@ void ConfigurationManager::loadConfiguration()
     Preferences preferences;
     preferences.begin(PREFERENCES_DEVICE_CONFIG, true);
 
+    // keys can't be too long since there is a length limit.
     m_config.interval = preferences.getUInt("interval", 30000);
     m_config.units = preferences.getString("units", "metric").c_str();
-    m_config.apiKey = preferences.getString("open-meteo-api-key", "").c_str();
+    m_config.apiKey = preferences.getString("om-api-key", "").c_str();
 
     preferences.end();
 }
@@ -49,9 +51,9 @@ void ConfigurationManager::registerHandlers()
         {
             preferences.begin(PREFERENCES_DEVICE_CONFIG);
 
-            preferences.putString("open-meteo-api-key", server.arg("open-meteo-api-key"));
-            preferences.putString("units", server.arg("units"));
             preferences.putUInt("interval", server.arg("interval").toInt());
+            preferences.putString("units", server.arg("units").c_str());
+            preferences.putString("om-api-key", server.arg("om-api-key").c_str());
 
             preferences.end();
             loadConfiguration();

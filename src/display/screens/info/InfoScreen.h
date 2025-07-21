@@ -8,8 +8,10 @@
 class InfoScreen final : public Screen
 {
 public:
-    explicit InfoScreen(const DeviceConfig& config);
+    explicit InfoScreen();
     void show(DisplayThing& displayThing) override;
+    void setConfig(DeviceConfig& deviceConfig) override;
+
 private:
     DeviceConfig m_config;
 };

@@ -15,10 +15,11 @@ void DisplayManager::setScreen(std::unique_ptr<Screen> newScreen)
     }
 }
 
-void DisplayManager::update() const
+void DisplayManager::update(DeviceConfig& deviceConfig) const
 {
     if (currentScreen)
     {
+        currentScreen->setConfig(deviceConfig);
         currentScreen->show(displayThing);
     }
 }

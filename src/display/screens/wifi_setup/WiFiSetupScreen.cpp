@@ -8,9 +8,16 @@
 #include <Fonts/FreeSansBold9pt7b.h>
 #include "display/DisplayManager.h"
 
+static GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT>* g_current_display = nullptr;
+
 static void draw_qr_code(const esp_qrcode_handle_t qrcode)
 {
-    auto& display = displayThing.getDisplay();
+    if (!g_current_display)
+    {
+        return;
+    }
+
+    auto& display = *g_current_display;
     const int size = esp_qrcode_get_size(qrcode);
 
     if (size <= 0)
@@ -45,6 +52,11 @@ static void draw_qr_code(const esp_qrcode_handle_t qrcode)
 WiFiSetupScreen::WiFiSetupScreen(std::string ap_password) : access_point_password(std::move(ap_password))
 {
 }
+
+void WiFiSetupScreen::setConfig(DeviceConfig& deviceConfig)
+{
+}
+
 
 void WiFiSetupScreen::show(DisplayThing& displayThing)
 {
@@ -101,9 +113,14 @@ void WiFiSetupScreen::show(DisplayThing& displayThing)
         auto qrcode_config = ESP_QRCODE_CONFIG_DEFAULT();
         qrcode_config.display_func = &draw_qr_code;
 
-        String network_payload = "WIFI:T:WPA;S:" + String(ACCESS_POINT_SETUP_SSID) + ";P:" + access_point_password.
-            c_str() + ";;";
+        // set current display in a global variable so we can access it in our draw_qr_code function
+        g_current_display = &display;
+
+        String network_payload = "WIFI:T:WPA;S:" + String(ACCESS_POINT_SETUP_SSID) + ";P:" + access_point_password.c_str() + ";;";
         const esp_err_t qrcode_error = esp_qrcode_generate(&qrcode_config, network_payload.c_str());
+
+        // set the current display back to the nullptr after use
+        g_current_display = nullptr;
 
         if (qrcode_error != ESP_OK)
         {

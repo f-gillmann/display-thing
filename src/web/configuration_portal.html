@@ -33,13 +33,14 @@
             background-color: var(--base);
             color: var(--text);
             display: flex;
-            align-items: center;
+            align-items: start;
             justify-content: center;
             min-height: 100vh;
             padding: 1rem 0;
         }
 
         .container {
+            margin-top: 10vh;
             background-color: var(--mantle);
             padding: 2rem 2.5rem;
             border-radius: 12px;
@@ -83,6 +84,8 @@
             color: var(--text);
             font-size: 1rem;
             transition: border-color 0.2s ease-in-out;
+            -webkit-appearance: none;
+            -moz-appearance: none;
             appearance: none;
         }
 
@@ -183,15 +186,29 @@
             <label for="interval">Update Interval</label>
             <select id="interval" name="interval">
                 <option value="30000" selected>30 seconds</option>
-                <option value="60000">60 seconds</option>
-                <option value="90000">90 seconds</option>
-                <option value="12000">120 seconds</option>
+                <option value="60000">1 minute</option>
+                <option value="90000">1 minute 30 seconds</option>
+                <option value="120000">2 minutes</option>
+                <option value="150000">2 minutes 30 seconds</option>
+                <option value="180000">3 minutes</option>
+                <option value="210000">3 minutes 30 seconds</option>
+                <option value="240000">4 minutes</option>
+                <option value="270000">4 minutes 30 seconds</option>
+                <option value="300000">5 minutes</option>
+                <option value="360000">6 minutes</option>
+                <option value="420000">7 minutes</option>
+                <option value="480000">8 minutes</option>
+                <option value="540000">9 minutes</option>
+                <option value="600000">10 minutes</option>
+                <option value="900000">15 minutes</option>
+                <option value="1200000">20 minutes</option>
+                <option value="1800000">30 minutes</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="open-meteo-api-key">Open-Meteo API key</label>
-            <input type="text" id="open-meteo-api-key" name="open-meteo-api-key" placeholder="Enter Open-Meteo API Key">
+            <label for="om-api-key">Open-Meteo API key</label>
+            <input type="text" id="om-api-key" name="om-api-key" placeholder="Enter Open-Meteo API Key">
         </div>
 
         <div class="form-group">
