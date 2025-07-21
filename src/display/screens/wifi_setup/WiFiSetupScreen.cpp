@@ -53,7 +53,7 @@ WiFiSetupScreen::WiFiSetupScreen(std::string ap_password) : access_point_passwor
 {
 }
 
-void WiFiSetupScreen::setConfig(DeviceConfig& deviceConfig)
+void WiFiSetupScreen::setConfig(const DeviceConfig& deviceConfig)
 {
 }
 

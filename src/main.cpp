@@ -7,9 +7,10 @@
 #include "display/screens/wifi_setup/WiFiSetupScreen.h"
 #include "wifi/WiFiSetupManager.h"
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 
-std::unique_ptr<T> make_unique(Args&&... args) {
+std::unique_ptr<T> make_unique(Args&&... args)
+{
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
@@ -20,7 +21,7 @@ std::unique_ptr<DisplayManager> displayManager;
 
 bool isConnected = false;
 bool first_draw_done = false;
-int updateInterval;
+int updateInterval = 30000;
 unsigned long lastUpdate = 0;
 
 void setup()
@@ -30,6 +31,16 @@ void setup()
     wifiSetupManager = make_unique<WiFiSetupManager>(*displayThing);
     configManager = make_unique<ConfigurationManager>(*displayThing);
     displayManager = make_unique<DisplayManager>(*displayThing);
+
+    // add config change listener so we can reload the screen when it changed
+    configManager->onConfigChanged(
+        [&](const DeviceConfig& newConfig)
+        {
+            Serial.printf("Configuration updated. New interval: %d. Forcing display refresh.\n", newConfig.interval);
+            updateInterval = static_cast<int32_t>(newConfig.interval);
+            displayManager->update(newConfig);
+        }
+    );
 
     pinMode(EPD_PWR, OUTPUT);
     digitalWrite(EPD_PWR, HIGH);
@@ -47,12 +58,13 @@ void setup()
     {
         Serial.printf("Connected. IP: %s\n", WiFi.localIP().toString().c_str());
 
-        // load config from flash and set configured interval
-        const DeviceConfig& currentConfig = configManager->getConfig();
-        updateInterval = static_cast<int32_t>(currentConfig.interval);
-
+        // register configuration website handlers and start webserver
         configManager->registerHandlers();
         displayThing->getWebServer().begin();
+
+        // load config from nvs flash and set configured interval
+        const DeviceConfig& currentConfig = configManager->getConfig();
+        updateInterval = static_cast<int32_t>(currentConfig.interval);
 
         displayManager->setScreen(make_unique<InfoScreen>());
     }
@@ -71,18 +83,16 @@ void loop()
         // handle requests for config page
         displayThing->getWebServer().handleClient();
 
-
-
         if (!first_draw_done || (millis() - lastUpdate > updateInterval))
         {
-            DeviceConfig currentConfig = configManager->getConfig();
+            const DeviceConfig& currentConfig = configManager->getConfig();
 
             displayManager->update(currentConfig);
             lastUpdate = millis();
             first_draw_done = true;
-        }
 
-        displayThing->getDisplay().hibernate();
+            displayThing->getDisplay().hibernate();
+        }
     }
     else
     {

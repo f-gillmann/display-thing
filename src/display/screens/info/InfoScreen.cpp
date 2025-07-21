@@ -65,7 +65,7 @@ void InfoScreen::show(DisplayThing& displayThing)
     } while (display.nextPage());
 }
 
-void InfoScreen::setConfig(DeviceConfig& deviceConfig)
+void InfoScreen::setConfig(const DeviceConfig& deviceConfig)
 {
     m_config = deviceConfig;
 }

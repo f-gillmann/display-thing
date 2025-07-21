@@ -1,14 +1,19 @@
 #include "ConfigurationManager.h"
 
-#include <WebServer.h>
 #include <Preferences.h>
-#include "web/configuration_portal.html.h"
+#include <WebServer.h>
 #include "config.h"
 #include "display/DisplayManager.h"
+#include "web/configuration_portal.html.h"
 
 ConfigurationManager::ConfigurationManager(DisplayThing& displayThing) : displayThing(displayThing)
 {
     loadConfiguration();
+}
+
+void ConfigurationManager::onConfigChanged(const ConfigChangeCallback& callback)
+{
+    m_onConfigChangeCallback = callback;
 }
 
 const DeviceConfig& ConfigurationManager::getConfig() const
@@ -27,6 +32,11 @@ void ConfigurationManager::loadConfiguration()
     m_config.apiKey = preferences.getString("om-api-key", "").c_str();
 
     preferences.end();
+
+    if (m_onConfigChangeCallback)
+    {
+        m_onConfigChangeCallback(m_config);
+    }
 }
 
 
