@@ -231,6 +231,21 @@
 
         <button type='submit'>Save Settings</button>
     </form>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/get_config')
+                .then(response => response.json())
+                .then(cfg => {
+                    document.getElementById('interval').value = cfg.interval;
+                    document.getElementById('om-api-key').value = cfg.apiKey;
+                    if (cfg.units === "imperial") {
+                        document.getElementById('imperial').checked = true;
+                    } else {
+                        document.getElementById('metric').checked = true;
+                    }
+                });
+        });
+    </script>
 </div>
 </body>
 </html>

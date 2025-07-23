@@ -68,8 +68,22 @@ void ConfigurationManager::registerHandlers()
             preferences.end();
             loadConfiguration();
 
-            const String response ="<html><head><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}a{color:#8aadf4;}</style></head><body><h1>Configuration Saved!</h1><p>Your settings have been updated.</p><br/><a href='/'>Go back</a></body></html>";
+            const String response =
+                "<html><head><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}a{color:#8aadf4;}</style></head><body><h1>Configuration Saved!</h1><p>Your settings have been updated.</p><br/><a href='/'>Go back</a></body></html>";
             server.send(200, "text/html", response);
+        }
+    );
+
+    server.on(
+        "/get_config", HTTP_GET, [&]()
+        {
+            const DeviceConfig& cfg = getConfig();
+            String json = "{";
+            json += R"("interval":)" + String(cfg.interval) + ",";
+            json += R"("apiKey":")" + String(cfg.apiKey.c_str()) + "\",";
+            json += R"("units":")" + String(cfg.units.c_str()) + "\"";
+            json += "}";
+            server.send(200, "application/json", json);
         }
     );
 }
