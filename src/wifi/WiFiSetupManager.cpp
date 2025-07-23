@@ -2,20 +2,46 @@
 
 #include <WiFi.h>
 #include "web/wifi_setup_portal.html.h"
+#include <vector>
+#include <algorithm>
+
+static std::string generateRandomSSID() {
+    static const std::vector<std::string> words = {
+        "loop", "wave", "garden", "river", "bridge", "maple", "temple",  "engine", "spire",
+        "matrix", "node", "stream", "branch", "portal", "frame", "shell", "thread", "core",
+        "bonsai", "koi", "petal", "fern", "cluster", "pixel", "leaf", "shard", "ember"
+    };
+
+    const int word1 = random(0, static_cast<int>(words.size()));
+    const int word2 = random(0, static_cast<int>(words.size()));
+
+    std::string ssid = words[word1] + "-" +  words[word2];
+
+    // ensure lowercase, just in case
+    std::transform(ssid.begin(), ssid.end(), ssid.begin(), ::tolower);
+
+    return ssid;
+}
 
 WiFiSetupManager::WiFiSetupManager(DisplayThing& displayThing) : displayThing(displayThing) { }
 
 std::string WiFiSetupManager::getAPPassword() const
 {
-    return ap_password;
+    return access_point_password;
+}
+
+std::string WiFiSetupManager::getAPSsid() const
+{
+    return access_point_ssid;
 }
 
 void WiFiSetupManager::startAP()
 {
-    ap_password = String(random(10000000, 100000000)).c_str();
+    access_point_password = String(random(10000000, 100000000)).c_str();
+    access_point_ssid = generateRandomSSID();
 
     WiFiClass::mode(WIFI_AP);
-    WiFi.softAP(ACCESS_POINT_SETUP_SSID, ap_password.c_str(), 1, false, 1);
+    WiFi.softAP(access_point_ssid.c_str(), access_point_password.c_str(), 1, false, 1);
     WiFi.softAPConfig(ACCESS_POINT_IP, ACCESS_POINT_IP, IPAddress(255, 255, 255, 0));
 
     auto& preferences = displayThing.getPreferences();
@@ -23,7 +49,7 @@ void WiFiSetupManager::startAP()
     auto& server = displayThing.getWebServer();
 
     dnsServer.start(53, "*", ACCESS_POINT_IP);
-    preferences.begin(PREFERENCES_WIFI_CONFIG);
+    preferences.begin(PREFERENCES_WIFI_CONFIG); // don't start in readonly since nvs_open can fail
 
     server.on("/", HTTP_GET, [&]() {
         server.sendHeader("Content-Encoding", "gzip");
@@ -91,7 +117,6 @@ void WiFiSetupManager::startAP()
 
     server.begin();
 }
-
 
 bool WiFiSetupManager::connect()
 {

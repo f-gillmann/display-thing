@@ -24,7 +24,7 @@ const DeviceConfig& ConfigurationManager::getConfig() const
 void ConfigurationManager::loadConfiguration()
 {
     Preferences preferences;
-    preferences.begin(PREFERENCES_DEVICE_CONFIG, true);
+    preferences.begin(PREFERENCES_DEVICE_CONFIG);
 
     // keys can't be too long since there is a length limit.
     m_config.interval = preferences.getUInt("interval", 30000);

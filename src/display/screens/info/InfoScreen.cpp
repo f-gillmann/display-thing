@@ -55,14 +55,14 @@ void InfoScreen::show(DisplayThing& displayThing)
         display.print("API Key:");
 
         String maskedKey = m_config.apiKey.empty()
-            ? "Not set"
-            : String(m_config.apiKey.substr(0, 4).c_str()) + "************";
+                               ? "Not set"
+                               : String(m_config.apiKey.substr(0, 4).c_str()) + "************";
 
         display.setFont(&FreeSansBold9pt7b);
         display.setCursor(value_x, static_cast<int16_t>(current_y));
         display.print(maskedKey);
-
-    } while (display.nextPage());
+    }
+    while (display.nextPage());
 }
 
 void InfoScreen::setConfig(const DeviceConfig& deviceConfig)

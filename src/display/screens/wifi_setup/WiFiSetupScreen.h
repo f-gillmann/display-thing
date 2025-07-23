@@ -6,10 +6,11 @@
 class WiFiSetupScreen final : public Screen
 {
 public:
-    explicit WiFiSetupScreen(std::string ap_password);
+    WiFiSetupScreen(std::string ap_ssid, std::string ap_password);
     void show(DisplayThing& displayThing) override;
     void setConfig(const DeviceConfig& deviceConfig) override;
 
 private:
+    std::string access_point_ssid;
     std::string access_point_password;
 };

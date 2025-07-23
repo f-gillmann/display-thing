@@ -10,10 +10,12 @@ public:
     bool connect();
     void handleClient() const;
     std::string getAPPassword() const;
+    std::string getAPSsid() const;
 
 private:
     void startAP();
 
     DisplayThing& displayThing;
-    std::string ap_password;
+    std::string access_point_password;
+    std::string access_point_ssid;
 };

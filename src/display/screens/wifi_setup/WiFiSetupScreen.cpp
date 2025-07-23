@@ -49,7 +49,8 @@ static void draw_qr_code(const esp_qrcode_handle_t qrcode)
     }
 }
 
-WiFiSetupScreen::WiFiSetupScreen(std::string ap_password) : access_point_password(std::move(ap_password))
+WiFiSetupScreen::WiFiSetupScreen(std::string ap_ssid, std::string ap_password)
+    : access_point_ssid(std::move(ap_ssid)), access_point_password(std::move(ap_password))
 {
 }
 
@@ -116,7 +117,7 @@ void WiFiSetupScreen::show(DisplayThing& displayThing)
         // set current display in a global variable so we can access it in our draw_qr_code function
         g_current_display = &display;
 
-        String network_payload = "WIFI:T:WPA;S:" + String(ACCESS_POINT_SETUP_SSID) + ";P:" + access_point_password.c_str() + ";;";
+        String network_payload = "WIFI:T:WPA;S:" + String(access_point_ssid.c_str()) + ";P:" + access_point_password.c_str() + ";;";
         const esp_err_t qrcode_error = esp_qrcode_generate(&qrcode_config, network_payload.c_str());
 
         // set the current display back to the nullptr after use
@@ -136,7 +137,7 @@ void WiFiSetupScreen::show(DisplayThing& displayThing)
         display.print("Network: ");
         display.setFont(&FreeSansBold9pt7b);
         display.setCursor(static_cast<int16_t>(wifi_credentials_x + 100), wifi_credentials_y);
-        display.print(ACCESS_POINT_SETUP_SSID);
+        display.print(access_point_ssid.c_str());
 
         wifi_credentials_y += 35;
         display.setFont(&FreeSans9pt7b);

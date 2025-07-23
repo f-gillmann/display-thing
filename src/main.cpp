@@ -72,7 +72,8 @@ void setup()
     {
         Serial.println("Not connected. Starting configuration portal.");
         std::string ap_password = wifiSetupManager->getAPPassword();
-        displayManager->setScreen(make_unique<WiFiSetupScreen>(ap_password));
+        std::string ap_ssid = wifiSetupManager->getAPSsid();
+        displayManager->setScreen(make_unique<WiFiSetupScreen>(ap_ssid, ap_password));
     }
 }
 
