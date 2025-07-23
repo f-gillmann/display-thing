@@ -47,20 +47,6 @@ void InfoScreen::show(DisplayThing& displayThing)
         display.setFont(&FreeSansBold9pt7b);
         display.setCursor(value_x, static_cast<int16_t>(current_y));
         display.print(m_config.units.c_str());
-        current_y += 25;
-
-        // open-meteo-api-key
-        display.setFont(&FreeSans9pt7b);
-        display.setCursor(label_x, static_cast<int16_t>(current_y));
-        display.print("API Key:");
-
-        String maskedKey = m_config.apiKey.empty()
-                               ? "Not set"
-                               : String(m_config.apiKey.substr(0, 4).c_str()) + "************";
-
-        display.setFont(&FreeSansBold9pt7b);
-        display.setCursor(value_x, static_cast<int16_t>(current_y));
-        display.print(maskedKey);
     }
     while (display.nextPage());
 }

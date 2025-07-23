@@ -29,7 +29,6 @@ void ConfigurationManager::loadConfiguration()
     // keys can't be too long since there is a length limit.
     m_config.interval = preferences.getUInt("interval", 30000);
     m_config.units = preferences.getString("units", "metric").c_str();
-    m_config.apiKey = preferences.getString("om-api-key", "").c_str();
 
     preferences.end();
 
@@ -63,7 +62,6 @@ void ConfigurationManager::registerHandlers()
 
             preferences.putUInt("interval", server.arg("interval").toInt());
             preferences.putString("units", server.arg("units").c_str());
-            preferences.putString("om-api-key", server.arg("om-api-key").c_str());
 
             preferences.end();
             loadConfiguration();
@@ -80,7 +78,6 @@ void ConfigurationManager::registerHandlers()
             const DeviceConfig& cfg = getConfig();
             String json = "{";
             json += R"("interval":)" + String(cfg.interval) + ",";
-            json += R"("apiKey":")" + String(cfg.apiKey.c_str()) + "\",";
             json += R"("units":")" + String(cfg.units.c_str()) + "\"";
             json += "}";
             server.send(200, "application/json", json);

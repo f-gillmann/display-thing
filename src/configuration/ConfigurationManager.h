@@ -7,7 +7,6 @@ struct DeviceConfig
 {
     uint32_t interval;
     std::string units;
-    std::string apiKey;
 };
 
 class ConfigurationManager
