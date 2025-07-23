@@ -67,7 +67,7 @@ void ConfigurationManager::registerHandlers()
             loadConfiguration();
 
             const String response =
-                "<html><head><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}a{color:#8aadf4;}</style></head><body><h1>Configuration Saved!</h1><p>Your settings have been updated.</p><br/><a href='/'>Go back</a></body></html>";
+                "<html><head><meta name=\"darkreader-lock\"><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}a{color:#8aadf4;}</style></head><body><h1>Configuration Saved!</h1><p>Your settings have been updated.</p><br/><a href='/'>Go back</a></body></html>";
             server.send(200, "text/html", response);
         }
     );

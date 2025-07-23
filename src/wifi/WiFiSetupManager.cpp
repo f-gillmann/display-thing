@@ -89,7 +89,7 @@ void WiFiSetupManager::startAP()
                 preferences.putString("password", server.arg("password"));
                 preferences.end();
 
-                const String response = "<html><head><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}</style></head><body><h1>Credentials Saved!</h1><p>The device will now restart to connect to '" + ssid + "'.</p></body></html>";
+                const String response = "<html><head><meta name=\"darkreader-lock\"><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}</style></head><body><h1>Credentials Saved!</h1><p>The device will now restart to connect to '" + ssid + "'.</p></body></html>";
                 server.send(200, "text/html", response);
 
                 delay(2000);
