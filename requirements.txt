@@ -1,1 +1,1 @@
-minify-html
+django-htmlmin

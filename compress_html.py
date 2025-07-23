@@ -1,7 +1,7 @@
+import glob
 import gzip
 import os
-import glob
-import minify_html
+from htmlmin.minify import html_minify
 
 Import("env")
 
@@ -15,7 +15,7 @@ def compress_web_files(source, target, env):
     with open(source_path, "r") as f_in:
         content = f_in.read()
 
-    minified_content = minify_html.minify(content, minify_js=False, minify_css=False)
+    minified_content = html_minify(content)
     compressed = gzip.compress(minified_content.encode("utf-8"), compresslevel=9)
     var_name = os.path.basename(source_path).upper().replace('.', '_').replace('-', '_')
 
