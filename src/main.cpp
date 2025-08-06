@@ -21,7 +21,7 @@ std::unique_ptr<DisplayManager> displayManager;
 
 bool isConnected = false;
 bool first_draw_done = false;
-int updateInterval = 30000;
+int interval = 30000;
 unsigned long lastUpdate = 0;
 
 void setup()
@@ -37,7 +37,7 @@ void setup()
         [&](const DeviceConfig& newConfig)
         {
             Serial.printf("Configuration updated. New interval: %d. Forcing display refresh.\n", newConfig.interval);
-            updateInterval = static_cast<int32_t>(newConfig.interval);
+            interval = static_cast<int32_t>(newConfig.interval);
             displayManager->update(newConfig);
         }
     );
@@ -64,7 +64,7 @@ void setup()
 
         // load config from nvs flash and set configured interval
         const DeviceConfig& currentConfig = configManager->getConfig();
-        updateInterval = static_cast<int32_t>(currentConfig.interval);
+        interval = static_cast<int32_t>(currentConfig.interval);
 
         displayManager->setScreen(make_unique<InfoScreen>());
     }
@@ -84,7 +84,7 @@ void loop()
         // handle requests for config page
         displayThing->getWebServer().handleClient();
 
-        if (!first_draw_done || (millis() - lastUpdate > updateInterval))
+        if (!first_draw_done || (millis() - lastUpdate > interval))
         {
             const DeviceConfig& currentConfig = configManager->getConfig();
 

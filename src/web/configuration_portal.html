@@ -1,30 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Device Configuration</title>
+    <title>Display Thing Panel</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <meta name="darkreader-lock">
     <style>
         :root {
+            /* Catppuccin Macchiato */
+            --rosewater: #f4dbd6;
+            --flamingo: #f0c6c6;
+            --pink: #f5bde6;
+            --mauve: #c6a0f6;
+            --red: #ed8796;
+            --maroon: #ee99a0;
+            --peach: #f5a97f;
+            --yellow: #eed49f;
+            --green: #a6da95;
+            --teal: #8bd5ca;
+            --sky: #91d7e3;
+            --sapphire: #7dc4e4;
+            --blue: #8aadf4;
+            --lavender: #b7bdf8;
+            --text: #cad3f5;
+            --subtext1: #b8c0e0;
+            --subtext0: #a5adce;
+            --overlay2: #939ab7;
+            --surface2: #6e738d;
+            --surface1: #5b6078;
+            --surface0: #494d64;
             --base: #24273a;
             --mantle: #1e2030;
             --crust: #181926;
-            --text: #cad3f5;
-            --subtext0: #a5adce;
-            --subtext1: #b8c0e0;
-            --overlay2: #939ab7;
-            --surface0: #363a4f;
-            --surface1: #494d64;
-            --blue: #8aadf4;
-            --mauve: #c6a0f6;
-            --sapphire: #7dc4e4;
         }
 
         html {
             box-sizing: border-box;
         }
 
-        *, *:before, *:after {
+        *,
+        *:before,
+        *:after {
             box-sizing: inherit;
         }
 
@@ -61,6 +76,17 @@
             margin-bottom: 2rem;
         }
 
+        h2 {
+            color: var(--sapphire);
+            margin-bottom: 2rem;
+        }
+
+        .page-description {
+            color: var(--subtext1);
+            margin-top: -1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -73,6 +99,7 @@
         }
 
         input[type='text'],
+        input[type='number'],
         select {
             width: 100%;
             padding: 0.75rem;
@@ -96,11 +123,22 @@
             padding-right: 2.5rem;
         }
 
+        input[type='number'] {
+            -moz-appearance: textfield;
+        }
+
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         input[type='text']::placeholder {
             color: var(--overlay2);
         }
 
         input[type='text']:focus,
+        input[type='number']:focus,
         select:focus {
             outline: none;
             border-color: var(--blue);
@@ -154,20 +192,20 @@
 
         button[type='submit'] {
             width: 100%;
-            margin-top: 2rem;
-            padding: 0.8rem;
+            padding: 0.75rem 1.5rem;
+            margin-top: 1.2rem;
             border: none;
             border-radius: 8px;
-            background-color: var(--blue);
+            background-color: var(--green);
             color: var(--crust);
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out;
         }
 
         button[type='submit']:hover {
-            background-color: var(--sapphire);
+            background-color: var(--teal);
         }
 
         .nav {
@@ -190,6 +228,7 @@
             transition: background-color 0.2s ease-in-out;
             line-height: 1;
         }
+
         .nav-toggle:hover {
             background-color: var(--surface1);
         }
@@ -199,7 +238,7 @@
             height: 24px;
         }
 
-        .nav-toggle .icon-close {
+        .nav-toggle .icon-close, .nav.nav-open .nav-toggle .icon-menu {
             display: none;
         }
 
@@ -233,37 +272,78 @@
             transition: background-color 0.2s, color 0.2s;
             position: relative;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
         }
 
-        .nav-btn::after {
+        .nav-btn::before {
             content: '';
-            width: 0.8em;
+            display: inline-block;
+            flex-shrink: 0;
+            width: 0;
             height: 0.8em;
             background-color: transparent;
             mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3e%3cpath fill='black' d='M0.59 10.59L5.17 6 0.59 1.41 2 0l6 6-6 6-1.41-1.41z'/%3e%3c/svg%3e");
             mask-size: 100% 100%;
-            transition: background-color 0.2s ease-in-out;
+            transition: width 0.2s ease-out, margin-right 0.2s ease-out, transform 0.3s ease-out, background-color 0.2s ease-out;
         }
 
-        .nav-btn.active {
+        .dropdown-toggle::after {
+            display: none;
+        }
+
+        .nav-btn:not(.active):not(.active-parent):hover::before {
+            width: 0.6em;
+            margin-right: 0.6em;
+            background-color: var(--mauve);
+        }
+
+        .nav-btn.active::before,
+        .nav-btn.active-parent::before {
+            width: 0.6em;
+            margin-right: 0.6em;
+            background-color: var(--blue);
+        }
+
+        .nav-dropdown.open > .dropdown-toggle::before {
+            width: 0.6em;
+            margin-right: 0.6em;
+            transform: rotate(90deg);
+            background-color: var(--text);
+        }
+
+        .nav-dropdown.open > .dropdown-toggle.active-parent::before {
+            background-color: var(--crust);
+        }
+
+        .module-dropdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, margin-top 0.3s ease-out;
+        }
+
+        .module-dropdown .nav-btn {
+            padding-left: 2rem;
+        }
+
+        .nav-dropdown.open > .module-dropdown {
+            max-height: 200px;
+            margin-top: 0.5rem;
+        }
+
+        .nav-btn.active,
+        .nav-btn.active-parent {
             color: var(--blue);
             font-weight: 600;
             background-color: var(--surface0);
         }
 
-        .nav-btn.active::after {
-            background-color: var(--blue);
-        }
-
-        .nav-btn:not(.active):hover {
+        .nav-btn:not(.active):not(.active-parent):hover {
             color: var(--mauve);
             background-color: var(--surface0);
-        }
-
-        .nav-btn:not(.active):hover::after {
-            background-color: var(--mauve);
         }
 
         .page {
@@ -272,6 +352,124 @@
 
         .page.active {
             display: block;
+        }
+
+        .add-module-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .add-module-form select {
+            flex-grow: 1;
+            min-width: 150px;
+        }
+
+        .add-module-form input[type='number'] {
+            width: 120px;
+        }
+
+        .add-module-form button {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--sapphire);
+            color: var(--crust);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .add-module-form button:hover {
+            background-color: var(--blue);
+        }
+
+        #queue-list {
+            list-style: none;
+            padding: 0;
+            min-height: 50px;
+        }
+
+        .queue-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--surface0);
+            padding: 0.75rem;
+            border: 1px solid var(--surface1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: grab;
+            justify-content: space-between;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .queue-item:active {
+            cursor: grabbing;
+        }
+
+        .queue-item.dragging {
+            opacity: 0.4;
+            background: var(--surface2);
+        }
+
+        .placeholder {
+            background-color: var(--surface0);
+            border: 2px dashed var(--blue);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .queue-item-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .queue-item-info svg {
+            flex-shrink: 0;
+        }
+
+        .queue-item-name {
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .queue-item-duration {
+            color: var(--subtext0);
+            cursor: pointer;
+        }
+
+        .queue-item-duration-edit {
+            height: 1.75em;
+            width: 50px;
+            padding: 1px 4px;
+            font-size: 0.9em;
+            text-align: center;
+            background-color: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--blue);
+            border-radius: 4px;
+        }
+
+        .queue-item-duration-edit:focus {
+            outline: none;
+            border-color: var(--mauve);
+        }
+
+        .queue-item-controls button {
+            background: none;
+            border: none;
+            color: var(--subtext1);
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .queue-item-controls button:hover {
+            color: var(--mauve);
         }
 
         .save-btn-desktop {
@@ -288,10 +486,15 @@
                 padding: 1.5rem 1rem;
                 min-height: 100vh;
             }
+
+            .nav {
+                margin-bottom: 0;
+            }
         }
 
         @media (min-width: 768px) {
-            html, body {
+            html,
+            body {
                 height: 100%;
                 overflow: hidden;
                 padding: 0;
@@ -328,12 +531,10 @@
             .nav-links {
                 max-height: none;
                 overflow: visible;
+                flex-grow: 1;
             }
 
             .nav-btn {
-                display: flex;
-                align-items: center;
-                justify-content: flex-start;
                 padding: 0.75rem 1.5rem;
             }
 
@@ -341,43 +542,27 @@
                 display: none;
             }
 
-            .nav-btn::before {
-                content: '';
-                display: inline-block;
-                width: 0;
-                height: 0.8em;
-                flex-shrink: 0;
-                background-color: transparent;
-                mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3e%3cpath fill='black' d='M0.59 10.59L5.17 6 0.59 1.41 2 0l6 6-6 6-1.41-1.41z'/%3e%3c/svg%3e");
-                mask-size: 100% 100%;
-                transition: width 0.2s ease-out, margin-right 0.2s ease-out;
+            .module-dropdown .nav-btn {
+                padding-left: 2.7rem;
             }
 
-            .nav-btn.active {
+            .nav-btn.active,
+            .nav-btn.active-parent {
                 background: var(--blue);
                 color: var(--crust);
                 box-shadow: none;
             }
 
-            .nav-btn.active::before {
-                width: 0.6em;
-                margin-right: 0.6em;
+            .nav-btn.active::before,
+            .nav-btn.active-parent::before {
                 background-color: var(--crust);
-            }
-
-            .nav-btn:not(.active):hover::before {
-                width: 0.6em;
-                margin-right: 0.6em;
-                background-color: var(--mauve);
-            }
-
-            .nav-btn:not(.active):hover {
-                background: var(--surface1);
-                color: var(--text);
             }
 
             .save-btn-desktop {
                 display: block;
+                font-size: 1rem;
+                font-weight: 600;
+                margin-top: auto;
             }
 
             .save-btn-mobile {
@@ -396,25 +581,38 @@
                 background-color: var(--base);
             }
 
-            h1, p {
+            h1,
+            p,
+            h2 {
                 text-align: left;
+            }
+
+            h2 {
+                margin-bottom: 2.5rem;
+            }
+
+            .page-description {
+                margin-top: -2rem;
             }
         }
 
         @media (min-width: 1200px) {
-            .form-group {
+            .form-group,
+            #queue-list-container {
                 width: 75%;
             }
         }
 
         @media (min-width: 1600px) {
-            .form-group {
+            .form-group,
+            #queue-list-container {
                 width: 50%;
             }
         }
 
         @media (min-width: 2000px) {
-            .form-group {
+            .form-group,
+            #queue-list-container {
                 width: 35%;
             }
         }
@@ -423,28 +621,46 @@
 <body>
 <div class="container">
     <nav class="nav">
-        <button id="nav-toggle-btn" class="nav-toggle" aria-controls="nav-link-list" aria-expanded="false" aria-label="Toggle navigation menu">
-            <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <button id="nav-toggle-btn" class="nav-toggle" aria-controls="nav-link-list" aria-expanded="false"
+                aria-label="Toggle navigation menu">
+            <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+            <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
         </button>
         <div class="nav-links" id="nav-link-list">
-            <button class="nav-btn active" data-page="general">General</button>
-            <button class="nav-btn" data-page="weather">Weather</button>
-            <button class="nav-btn" data-page="network">Network</button>
-            <button class="nav-btn" data-page="display">Display</button>
-            <button class="nav-btn" data-page="advanced">Advanced</button>
+            <button class="nav-btn active" data-page="settings">Settings</button>
+
+            <div class="nav-dropdown">
+                <button class="nav-btn dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                    Modules
+                </button>
+                <div class="module-dropdown">
+                    <button class="nav-btn" data-page="weather">Weather</button>
+                </div>
+            </div>
+
+            <button class="nav-btn" data-page="queue">Queue</button>
             <button type='submit' form="config-form" class="save-btn-desktop">Save Settings</button>
         </div>
     </nav>
-
     <main class="main-content">
-        <h1>Device Configuration</h1>
         <form id="config-form" action='/save_config' method='POST'>
-            <div class="page active" id="general">
+            <div class="page active" id="settings">
+                <h2>Settings</h2>
+                <p class="page-description">
+                    Configure the global settings for the display panel.
+                </p>
                 <div class="form-group">
                     <label for="interval">Update Interval</label>
                     <select id="interval" name="interval">
-                        <option value="30000">30 seconds</option>
                         <option value="60000">1 minute</option>
                         <option value="90000">1 minute 30 seconds</option>
                         <option value="120000">2 minutes</option>
@@ -464,10 +680,8 @@
                         <option value="1800000">30 minutes</option>
                     </select>
                 </div>
-            </div>
-            <div class="page" id="weather">
                 <div class="form-group">
-                    <label>Units</label>
+                    <label>Unit System</label>
                     <div class="radio-group">
                         <input type="radio" id="metric" name="units" value="metric" checked>
                         <label for="metric">Metric</label>
@@ -477,6 +691,54 @@
                     </div>
                 </div>
             </div>
+            <div class="page" id="weather">
+                <h2>Weather Module</h2>
+                <p class="page-description">
+                    Set up the location and options for the weather module.
+                </p>
+                <div class="form-group">
+                    <label for="weather-lat">Latitude</label>
+                    <input type="number" id="weather-lat" name="w_lat" placeholder="e.g., 51.16" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="weather-lon">Longitude</label>
+                    <input type="number" id="weather-lon" name="w_lon" placeholder="e.g., 10.45" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="weather-service">Weather Service</label>
+                    <select id="weather-service" name="w_svc">
+                        <option value="openmeteo">Open-Meteo</option>
+                        <option value="openweathermap">OpenWeatherMap</option>
+                    </select>
+                </div>
+                <div class="form-group" id="weather-apikey-container" style="display: none;">
+                    <label for="weather-apikey">API Key</label>
+                    <input type="text" id="weather-apikey" name="w_key" placeholder="Enter your OpenWeatherMap API Key">
+                </div>
+            </div>
+            <div class="page" id="queue">
+                <h2>Module Queue</h2>
+                <p class="page-description">
+                    Add modules to the display queue. Drag and drop to reorder.
+                </p>
+                <div class="form-group">
+                    <div class="add-module-form">
+                        <label for="module-select" class="visually-hidden">Select Module</label>
+                        <select id="module-select">
+                            <option value="weather">Weather</option>
+                        </select>
+                        <label for="module-duration" class="visually-hidden">Module Duration in Seconds</label>
+                        <input type="number" id="module-duration" value="60" min="15" placeholder="Seconds">
+                        <button type="button" id="add-module-btn">Add to Queue</button>
+                    </div>
+                </div>
+                <div id="queue-list-container">
+                    <ul id="queue-list">
+                    </ul>
+                </div>
+                <div id="hidden-queue-inputs"></div>
+            </div>
+
             <button type='submit' class="save-btn-mobile">Save Settings</button>
         </form>
     </main>
@@ -484,23 +746,273 @@
 <script>
     const navToggle = document.getElementById('nav-toggle-btn');
     const nav = document.querySelector('.nav');
-
     if (navToggle && nav) {
         navToggle.addEventListener('click', () => {
             const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
             nav.classList.toggle('nav-open');
-            navToggle.setAttribute('aria-expanded', !isExpanded);
+            navToggle.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
         });
     }
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.page).classList.add('active');
+    document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+
+            const parentDropdown = this.closest('.nav-dropdown');
+            if (parentDropdown) {
+                parentDropdown.classList.toggle('open');
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', !isExpanded);
+            }
         });
     });
+
+    document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('active-parent');
+            });
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+            this.classList.add('active');
+            document.getElementById(this.dataset.page).classList.add('active');
+
+        });
+    });
+
+    const addModuleBtn = document.getElementById('add-module-btn');
+    const moduleSelect = document.getElementById('module-select');
+    const moduleDurationInput = document.getElementById('module-duration');
+    const queueList = document.getElementById('queue-list');
+    const hiddenQueueInputsContainer = document.getElementById('hidden-queue-inputs');
+    let draggedItem = null;
+
+    function updateHiddenInputs() {
+        hiddenQueueInputsContainer.innerHTML = '';
+        const items = queueList.querySelectorAll('.queue-item');
+
+        items.forEach((item, index) => {
+            const moduleInput = document.createElement('input');
+            moduleInput.type = 'hidden';
+            moduleInput.name = `q_m_${index}`;
+            moduleInput.value = item.dataset.module;
+            hiddenQueueInputsContainer.appendChild(moduleInput);
+
+            const durationInput = document.createElement('input');
+            durationInput.type = 'hidden';
+            durationInput.name = `q_d_${index}`;
+            durationInput.value = item.dataset.duration;
+            hiddenQueueInputsContainer.appendChild(durationInput);
+        });
+    }
+
+    function createQueueItem(module, duration) {
+        const listItem = document.createElement('li');
+        listItem.className = 'queue-item';
+        listItem.draggable = true;
+        listItem.dataset.module = module;
+        listItem.dataset.duration = duration;
+
+        const moduleText = moduleSelect.querySelector(`option[value="${module}"]`).textContent;
+
+        listItem.innerHTML = `
+            <div class="queue-item-info">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="color: var(--overlay2);"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                <span class="queue-item-name">${moduleText}</span>
+                <span class="queue-item-duration">${duration} sec</span>
+            </div>
+            <div class="queue-item-controls">
+                <button type="button" class="remove-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+        return listItem;
+    }
+
+    addModuleBtn.addEventListener('click', () => {
+        const module = moduleSelect.value;
+        const duration = moduleDurationInput.value;
+        if (duration && duration > 0) {
+            const newItem = createQueueItem(module, duration);
+            queueList.appendChild(newItem);
+            updateHiddenInputs();
+        }
+    });
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.queue-item:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return {offset: offset, element: child};
+            } else {
+                return closest;
+            }
+        }, {offset: Number.NEGATIVE_INFINITY}).element;
+    }
+
+    queueList.addEventListener('click', e => {
+        const removeBtn = e.target.closest('.remove-btn');
+        if (removeBtn) {
+            removeBtn.closest('.queue-item').remove();
+            updateHiddenInputs();
+            return;
+        }
+
+        const durationSpan = e.target.closest('.queue-item-duration');
+        if (durationSpan) {
+            const listItem = durationSpan.closest('.queue-item');
+            if (listItem.querySelector('.queue-item-duration-edit')) return;
+
+            const currentDuration = listItem.dataset.duration;
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'queue-item-duration-edit';
+            input.value = currentDuration;
+            input.min = '1';
+
+            const saveChanges = () => {
+                const newDuration = input.value.trim();
+                const newDurationNum = parseInt(newDuration, 10);
+
+                if (!isNaN(newDurationNum) && newDurationNum > 0) {
+                    listItem.dataset.duration = newDurationNum.toString();
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'queue-item-duration';
+                    newSpan.textContent = `${newDurationNum} sec`;
+                    input.replaceWith(newSpan);
+                    updateHiddenInputs();
+                } else {
+                    input.replaceWith(durationSpan);
+                }
+            };
+
+            input.addEventListener('blur', saveChanges);
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') {
+                    input.blur();
+                } else if (ev.key === 'Escape') {
+                    input.replaceWith(durationSpan);
+                }
+            });
+
+            durationSpan.replaceWith(input);
+            input.focus();
+            input.select();
+        }
+    });
+
+    queueList.addEventListener('dragstart', e => {
+        if (e.target && e.target.classList.contains('queue-item')) {
+            draggedItem = e.target;
+            setTimeout(() => {
+                draggedItem.classList.add('dragging');
+            }, 0);
+        }
+    });
+
+    queueList.addEventListener('dragend', () => {
+        if (draggedItem) {
+            draggedItem.classList.remove('dragging');
+            document.querySelector('.placeholder')?.remove();
+            draggedItem = null;
+            updateHiddenInputs();
+        }
+    });
+
+    queueList.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (!draggedItem) return;
+
+        const afterElement = getDragAfterElement(queueList, e.clientY);
+
+        if (afterElement === draggedItem.nextElementSibling) {
+            document.querySelector('.placeholder')?.remove();
+            return;
+        }
+
+        const placeholder = document.querySelector('.placeholder') || document.createElement('li');
+
+        if (!placeholder.classList.contains('placeholder')) {
+            placeholder.className = 'placeholder';
+            placeholder.style.height = `${draggedItem.offsetHeight}px`;
+        }
+
+        if (afterElement == null) {
+            queueList.appendChild(placeholder);
+        } else {
+            queueList.insertBefore(placeholder, afterElement);
+        }
+    });
+
+    queueList.addEventListener('drop', e => {
+        e.preventDefault();
+        const placeholder = document.querySelector('.placeholder');
+        if (placeholder && draggedItem) {
+            placeholder.parentNode.insertBefore(draggedItem, placeholder);
+        }
+    });
+
+    const serviceSelect = document.getElementById('weather-service');
+    const apiKeyContainer = document.getElementById('weather-apikey-container');
+
+    serviceSelect.addEventListener('change', function () {
+        if (this.value === 'openweathermap') {
+            apiKeyContainer.style.display = 'block';
+        } else {
+            apiKeyContainer.style.display = 'none';
+        }
+    });
+
+    function populateForm(cfg) {
+        const fieldMappings = {
+            'interval': 'interval',
+            'weather_lat': 'weather-lat',
+            'weather_lon': 'weather-lon',
+            'weather_apikey': 'weather-apikey'
+        };
+
+        if (cfg.settings) {
+            for (const key in fieldMappings) {
+                if (cfg.settings.hasOwnProperty(key)) {
+                    const elementId = fieldMappings[key];
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.value = cfg.settings[key];
+                    }
+                }
+            }
+
+            if (cfg.settings.units) {
+                document.getElementById('imperial').checked = (cfg.settings.units === 'imperial');
+                document.getElementById('metric').checked = (cfg.settings.units !== 'imperial');
+            }
+
+            if (cfg.settings.hasOwnProperty('weather_service')) {
+                const serviceSelect = document.getElementById('weather-service');
+                if (serviceSelect) {
+                    serviceSelect.value = cfg.settings.weather_service;
+                    serviceSelect.dispatchEvent(new Event('change'));
+                }
+            }
+        }
+
+        if (cfg.queue && Array.isArray(cfg.queue)) {
+            queueList.innerHTML = '';
+            cfg.queue.forEach(item => {
+                const newItem = createQueueItem(item.module, item.duration);
+                queueList.appendChild(newItem);
+            });
+            updateHiddenInputs();
+        }
+    }
 
     document.addEventListener("DOMContentLoaded", function () {
         fetch('/get_config')
@@ -510,12 +1022,7 @@
                 }
                 return response.json();
             })
-            .then(cfg => {
-                if (cfg.interval)
-                    document.getElementById('interval').value = cfg.interval;
-
-                cfg.units === "imperial" ? document.getElementById('imperial').checked = true : document.getElementById('metric').checked = true;
-            })
+            .then(populateForm)
             .catch(error => console.error('Error loading config:', error));
     });
 </script>

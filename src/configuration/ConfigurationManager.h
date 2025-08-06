@@ -3,11 +3,25 @@
 #include <functional>
 #include "DisplayThing.h"
 
+struct ModuleQueueItem
+{
+    String name;
+    unsigned int duration;
+};
+
 struct DeviceConfig
 {
     uint32_t interval;
-    std::string units;
+    String units;
+
+    std::vector<ModuleQueueItem> queue;
+
+    float weather_lat;
+    float weather_lon;
+    String weather_service;
+    String weather_apikey;
 };
+
 
 class ConfigurationManager
 {
