@@ -1,13 +1,12 @@
 #pragma once
 
 // Pins
-#define EPD_DIN   4
-#define EPD_CLK   5
-#define EPD_CS    18
-#define EPD_DC    19
-#define EPD_RST   21
-#define EPD_BUSY  22
-#define EPD_PWR   23
+#define EPD_DIN   14
+#define EPD_CLK   13
+#define EPD_CS    15
+#define EPD_DC    27
+#define EPD_RST   26
+#define EPD_BUSY  25
 
 #define EPD_MOSI  EPD_DIN
 #define EPD_MISO  (-1)

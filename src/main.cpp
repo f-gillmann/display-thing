@@ -42,9 +42,6 @@ void setup()
         }
     );
 
-    pinMode(EPD_PWR, OUTPUT);
-    digitalWrite(EPD_PWR, HIGH);
-
     Serial.begin(115200);
 
     auto& display = displayThing->getDisplay();
