@@ -49,9 +49,6 @@ void setup()
     {
         Serial.printf("Connected. IP: %s\n", WiFi.localIP().toString().c_str());
 
-        // start ntp
-        waitForSync();
-
         // register configuration website handlers and start webserver
         configManager->registerHandlers();
         displayThing->getWebServer().begin();
