@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "config.h"
 #include "DisplayThing.h"
-#include "ezTime.h"
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
 #include "display/screens/wifi_setup/WiFiSetupScreen.h"
