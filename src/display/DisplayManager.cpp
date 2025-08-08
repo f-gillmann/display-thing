@@ -1,14 +1,15 @@
 #include "DisplayManager.h"
 #include "util.hpp"
+#include "modules/clock/ClockModule.h"
 #include "modules/weather/WeatherModule.h"
 #include "screens/welcome/WelcomeScreen.h"
 
 std::unique_ptr<Screen> createModule(const std::string& name)
 {
     if (name == "weather")
-    {
         return make_unique<WeatherModule>();
-    }
+    if (name == "clock")
+        return make_unique<ClockModule>();
 
     return nullptr;
 }

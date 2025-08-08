@@ -53,7 +53,7 @@ void setup()
         configManager->registerHandlers();
         displayThing->getWebServer().begin();
 
-        // load config from nvs flash and set configured interval
+        // build the module queue from our saved configuration
         displayManager->buildQueue(configManager->getConfig());
     }
     else

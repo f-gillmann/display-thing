@@ -1,11 +1,8 @@
-//
-// Created by Florian on 08/08/2025.
-//
-
 #include "WeatherModule.h"
 
 #include "util.hpp"
 #include "display/services/wheater/OpenMeteoService.h"
+#include "display/services/wheater/OpenWeatherMapService.h"
 #include "Fonts/FreeSans9pt7b.h"
 #include "Fonts/FreeSansBold12pt7b.h"
 
@@ -14,6 +11,10 @@ std::unique_ptr<WeatherService> createWeatherService(const std::string& serviceN
     if (serviceName == "openmeteo")
     {
         return make_unique<OpenMeteoService>();
+    }
+    if (serviceName == "openweathermap")
+    {
+        return make_unique<OpenWeatherMapService>();
     }
 
     return nullptr;

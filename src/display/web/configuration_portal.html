@@ -180,10 +180,12 @@
             padding: 0.45rem;
             text-align: center;
             color: var(--subtext0);
-            font-weight: 500;
+            font-weight: 600;
+            transition-property: color;
+            transition-duration: 0.2s;
+            transition-timing-function: ease-in-out;
             cursor: pointer;
             border-radius: 6px;
-            transition: color 0.3s ease-in-out;
             z-index: 2;
         }
 
@@ -199,13 +201,12 @@
             transition: transform 0.3s ease-in-out;
         }
 
-        #imperial:checked ~ .glider {
+        #imperial:checked ~ .glider, #h12:checked ~ .glider {
             transform: translateX(100%);
         }
 
         .radio-group input[type="radio"]:checked + label {
             color: var(--crust);
-            font-weight: 600;
         }
 
         button[type='submit'] {
@@ -533,7 +534,7 @@
 
             .nav {
                 justify-content: flex-start;
-                width: 240px;
+                width: 280px;
                 flex-shrink: 0;
                 background-color: var(--mantle);
                 border-right: 2px solid var(--surface1);
@@ -661,6 +662,7 @@
                     Modules
                 </button>
                 <div class="module-dropdown">
+                    <button class="nav-btn" data-page="clock">Clock</button>
                     <button class="nav-btn" data-page="weather">Weather</button>
                 </div>
             </div>
@@ -672,7 +674,7 @@
     <main class="main-content">
         <form id="config-form" action='/save_config' method='POST'>
             <div class="page active" id="settings">
-                <h2>Settings</h2>
+                <h2>Global Settings</h2>
                 <p class="page-description">
                     Configure the global settings for the display panel.
                 </p>
@@ -697,6 +699,26 @@
                         <span class="glider"></span>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Clock Format</label>
+                    <div class="radio-group">
+                        <input type="radio" id="h24" name="clock_format" value="24" checked>
+                        <label for="h24">24-Hour</label>
+                        <input type="radio" id="h12" name="clock_format" value="12">
+                        <label for="h12">12-Hour</label>
+                        <span class="glider"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="timezone">Timezone</label>
+                    <select id="timezone" name="timezone"></select>
+                </div>
+            </div>
+            <div class="page" id="clock">
+                <h2>Clock Module</h2>
+                <p class="page-description">
+                    The clock module displays the current time. You can customize the time format in the global settings.
+                </p>
             </div>
             <div class="page" id="weather">
                 <h2>Weather Module</h2>
@@ -705,21 +727,22 @@
                 </p>
                 <div class="form-group">
                     <label for="weather-lat">Latitude</label>
-                    <input type="number" id="weather-lat" name="w_lat" placeholder="e.g., 51.16" step="any">
+                    <input type="number" id="weather-lat" name="weather_lat" placeholder="e.g., 51.16" step="any">
                 </div>
                 <div class="form-group">
                     <label for="weather-lon">Longitude</label>
-                    <input type="number" id="weather-lon" name="w_lon" placeholder="e.g., 10.45" step="any">
+                    <input type="number" id="weather-lon" name="weather_lon" placeholder="e.g., 10.45" step="any">
                 </div>
                 <div class="form-group">
                     <label for="weather-service">Weather Service</label>
-                    <select id="weather-service" name="w_svc">
+                    <select id="weather-service" name="weather_service">
                         <option value="openmeteo">Open-Meteo</option>
+                        <option value="openweathermap">OpenWeatherMap</option>
                     </select>
                 </div>
                 <div class="form-group" id="weather-apikey-container" style="display: none;">
                     <label for="weather-apikey">API Key</label>
-                    <input type="text" id="weather-apikey" name="w_key" placeholder="Enter your API Key">
+                    <input type="text" id="weather-apikey" name="weather_apikey" placeholder="Enter your API Key">
                 </div>
             </div>
             <div class="page" id="queue">
@@ -731,6 +754,7 @@
                     <div class="add-module-form">
                         <label for="module-select" class="visually-hidden">Select Module</label>
                         <select id="module-select">
+                            <option value="clock">Clock</option>
                             <option value="weather">Weather</option>
                         </select>
                         <label for="module-duration" class="visually-hidden">Module Duration in Seconds</label>
@@ -785,6 +809,10 @@
             this.classList.add('active');
             document.getElementById(this.dataset.page).classList.add('active');
 
+            const parentDropdown = this.closest('.nav-dropdown');
+            if(parentDropdown) {
+                parentDropdown.querySelector('.dropdown-toggle').classList.add('active-parent');
+            }
         });
     });
 
@@ -970,7 +998,7 @@
     const apiKeyContainer = document.getElementById('weather-apikey-container');
 
     serviceSelect.addEventListener('change', function () {
-        if (this.value !== 'openmeteo') {
+        if (this.value === 'openweathermap') {
             apiKeyContainer.style.display = 'block';
         } else {
             apiKeyContainer.style.display = 'none';
@@ -999,6 +1027,32 @@
         intervalUnit.addEventListener('change', updateHiddenInterval);
     }
 
+    function populateTimezones() {
+        const timezoneSelect = document.getElementById('timezone');
+        if (!timezoneSelect) return;
+
+        try {
+            const timezones = Intl.supportedValuesOf('timeZone');
+            const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            timezones.forEach(tz => {
+                const option = document.createElement('option');
+                option.value = tz;
+                option.textContent = tz.replace(/_/g, ' ');
+                timezoneSelect.appendChild(option);
+            });
+
+            if (timezones.includes(browserTz)) {
+                timezoneSelect.value = browserTz;
+            }
+        } catch (e) {
+            console.error("Could not populate timezones:", e);
+            const option = document.createElement('option');
+            option.value = 'UTC';
+            option.textContent = 'UTC';
+            timezoneSelect.appendChild(option);
+        }
+    }
 
     function populateForm(cfg) {
         if (cfg.settings) {
@@ -1014,6 +1068,18 @@
                         intervalDisplay.value = ms / 1000;
                     }
                 }
+            }
+
+            if (cfg.settings.hasOwnProperty('timezone')) {
+                const timezoneSelect = document.getElementById('timezone');
+                if (timezoneSelect) {
+                    timezoneSelect.value = cfg.settings.timezone;
+                }
+            }
+
+            if (cfg.settings.hasOwnProperty('clock_format')) {
+                document.getElementById('h12').checked = (cfg.settings.clock_format === '12');
+                document.getElementById('h24').checked = (cfg.settings.clock_format !== '12');
             }
 
             const fieldMappings = {
@@ -1059,6 +1125,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        populateTimezones();
         fetch('/get_config')
             .then(response => {
                 if (!response.ok) {

@@ -17,6 +17,8 @@ struct DeviceConfig
 {
     unsigned int interval;
     String units;
+    String clock_format;
+    String timezone;
     float weather_lat;
     float weather_lon;
     String weather_service;

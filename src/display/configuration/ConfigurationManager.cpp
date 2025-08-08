@@ -29,14 +29,16 @@ void ConfigurationManager::loadConfiguration()
     // keys can't be too long since there is a length limit.
 
     // load general settings
-    m_config.interval = preferences.getUInt("interval", 60000);
-    m_config.units = preferences.getString("units", "metric").c_str();
+    m_config.interval = preferences.getUInt("in", 60000); // interval
+    m_config.units = preferences.getString("un", "metric").c_str(); // units
+    m_config.clock_format = preferences.getString("cl_fo", "24"); // clock_format
+    m_config.timezone = preferences.getString("tz", "UTC"); // timezone
 
     // load weather settings
-    m_config.weather_lat = preferences.getFloat("w_lat", 51.16f);
-    m_config.weather_lon = preferences.getFloat("w_lon", 10.45f);
-    m_config.weather_service = preferences.getString("w_svc", "openmeteo");
-    m_config.weather_apikey = preferences.getString("w_key", "");
+    m_config.weather_lat = preferences.getFloat("w_lat", 0.0f); // weather_lat
+    m_config.weather_lon = preferences.getFloat("w_lon", 0.0f); // weather_lon
+    m_config.weather_service = preferences.getString("w_svc", "openmeteo"); // weather_service
+    m_config.weather_apikey = preferences.getString("w_key", ""); // weather_apikey
 
     m_config.queue.clear();
     const int queueSize = preferences.getInt("q_size", 0);
@@ -92,35 +94,37 @@ void ConfigurationManager::registerHandlers()
                 interval = 60000;
             }
 
-            preferences.putUInt("interval", interval);
-            preferences.putString("units", server.arg("units").c_str());
+            preferences.putUInt("in", interval); // interval
+            preferences.putString("un", server.arg("units").c_str()); // units
+            preferences.putString("cl_fo", server.arg("clock_format").c_str()); // clock_format
+            preferences.putString("tz", server.arg("timezone").c_str()); // timezone
 
-            preferences.putFloat("w_lat", server.arg("w_lat").toFloat());
-            preferences.putFloat("w_lon", server.arg("w_lon").toFloat());
-            preferences.putString("w_svc", server.arg("w_svc"));
-            preferences.putString("w_key", server.arg("w_key"));
+            preferences.putFloat("w_lat", server.arg("weather_lat").toFloat()); // weather_lat
+            preferences.putFloat("w_lon", server.arg("weather_lon").toFloat()); // weather_lon
+            preferences.putString("w_svc", server.arg("weather_service")); // weather_service
+            preferences.putString("w_key", server.arg("weather_apikey")); // weather_apikey
 
             // clear old saved queue
             const int oldQueueSize = preferences.getInt("q_size", 0);
             for (int i = 0; i < oldQueueSize; ++i)
             {
-                preferences.remove(("q_m_" + String(i)).c_str());
-                preferences.remove(("q_d_" + String(i)).c_str());
+                preferences.remove(("q_m_" + String(i)).c_str()); // queue_module_index
+                preferences.remove(("q_d_" + String(i)).c_str()); // queue_duration_index
             }
 
             int newQueueSize = 0;
             while (true)
             {
-                const String moduleArgName = "q_m_" + String(newQueueSize);
-                const String durationArgName = "q_d_" + String(newQueueSize);
+                const String moduleArgName = "q_m_" + String(newQueueSize); // queue_module_index
+                const String durationArgName = "q_d_" + String(newQueueSize); // queue_duration_index
 
                 if (server.hasArg(moduleArgName) && server.hasArg(durationArgName))
                 {
                     const String name = server.arg(moduleArgName);
                     const unsigned int duration = server.arg(durationArgName).toInt();
 
-                    preferences.putString(("q_m_" + String(newQueueSize)).c_str(), name);
-                    preferences.putUInt(("q_d_" + String(newQueueSize)).c_str(), duration);
+                    preferences.putString(("q_m_" + String(newQueueSize)).c_str(), name); // queue_module_index
+                    preferences.putUInt(("q_d_" + String(newQueueSize)).c_str(), duration); // queue_duration_index
 
                     newQueueSize++;
                 }
@@ -150,6 +154,8 @@ void ConfigurationManager::registerHandlers()
             const JsonObject settings = doc["settings"].to<JsonObject>();
             settings["interval"] = cfg.interval;
             settings["units"] = cfg.units;
+            settings["clock_format"] = cfg.clock_format;
+            settings["timezone"] = cfg.timezone;
             settings["weather_lat"] = cfg.weather_lat;
             settings["weather_lon"] = cfg.weather_lon;
             settings["weather_service"] = cfg.weather_service;
