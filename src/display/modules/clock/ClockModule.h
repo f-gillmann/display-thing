@@ -1,7 +1,6 @@
 #pragma once
 
 #include "display/modules/Module.h"
-#include "ezTime.h"
 
 class ClockModule final : public Module {
 public:
