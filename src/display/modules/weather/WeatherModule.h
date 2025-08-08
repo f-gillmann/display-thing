@@ -1,5 +1,6 @@
 #pragma once
 #include "display/modules/Module.h"
+#include "display/services/wheater/WheaterService.h"
 
 class WeatherModule final : public Module {
 public:
@@ -11,4 +12,6 @@ public:
 private:
     DeviceConfig m_config;
     bool m_isConfigured = false;
+    std::unique_ptr<WeatherService> m_weatherService;
+    WeatherData m_weatherData;
 };

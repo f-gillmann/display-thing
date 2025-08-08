@@ -715,12 +715,11 @@
                     <label for="weather-service">Weather Service</label>
                     <select id="weather-service" name="w_svc">
                         <option value="openmeteo">Open-Meteo</option>
-                        <option value="openweathermap">OpenWeatherMap</option>
                     </select>
                 </div>
                 <div class="form-group" id="weather-apikey-container" style="display: none;">
                     <label for="weather-apikey">API Key</label>
-                    <input type="text" id="weather-apikey" name="w_key" placeholder="Enter your OpenWeatherMap API Key">
+                    <input type="text" id="weather-apikey" name="w_key" placeholder="Enter your API Key">
                 </div>
             </div>
             <div class="page" id="queue">
@@ -971,7 +970,7 @@
     const apiKeyContainer = document.getElementById('weather-apikey-container');
 
     serviceSelect.addEventListener('change', function () {
-        if (this.value === 'openweathermap') {
+        if (this.value !== 'openmeteo') {
             apiKeyContainer.style.display = 'block';
         } else {
             apiKeyContainer.style.display = 'none';
@@ -1028,7 +1027,9 @@
                     const elementId = fieldMappings[key];
                     const element = document.getElementById(elementId);
                     if (element) {
-                        element.value = cfg.settings[key];
+                        cfg.settings[key] === 0
+                            ? element.value = ""
+                            : element.value = cfg.settings[key];
                     }
                 }
             }
