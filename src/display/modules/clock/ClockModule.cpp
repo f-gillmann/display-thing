@@ -27,6 +27,12 @@ void ClockModule::setConfig(const DeviceConfig& deviceConfig)
     }
 }
 
+
+/*
+ *TODO:
+ * Fix timezone being set to UTC because we can't use the 'Europe/Berlin' format directly.
+ * We can probably just make the browser parse a different format when using /save_config.
+*/
 void ClockModule::update()
 {
     if (!m_isConfigured) return;
@@ -35,7 +41,6 @@ void ClockModule::update()
     {
         const char* time_fmt = (m_config.clock_format == "12") ? "%I:%M" : "%H:%M";
         strftime(m_timeString, sizeof(m_timeString), time_fmt, &m_timeInfo);
-
         strftime(m_dateString, sizeof(m_dateString), "%A, %B %d", &m_timeInfo);
     }
     else
@@ -46,22 +51,27 @@ void ClockModule::update()
     }
 }
 
-void ClockModule::show(DisplayThing& displayThing) {
+void ClockModule::show(DisplayThing& displayThing)
+{
     auto& display = displayThing.getDisplay();
     display.setFullWindow();
     display.firstPage();
 
-    do {
+    do
+    {
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
 
-        if (m_isConfigured) {
-            if (m_timeString[0] != '\0') {
+        if (m_isConfigured)
+        {
+            if (m_timeString[0] != '\0')
+            {
                 constexpr int time_y = 70;
                 constexpr int date_y = 110;
                 constexpr int timezone_y = 135;
 
-                if (m_config.clock_format == "12") {
+                if (m_config.clock_format == "12")
+                {
                     char am_pm[3];
                     strftime(am_pm, sizeof(am_pm), "%p", &m_timeInfo);
 
@@ -84,8 +94,9 @@ void ClockModule::show(DisplayThing& displayThing) {
                     display.setFont(&FreeSansBold12pt7b);
                     display.setCursor(start_x + w_time + padding, time_y);
                     display.print(am_pm);
-
-                } else {
+                }
+                else
+                {
                     drawCenteredString(displayThing, m_timeString, &FreeSansBold24pt7b, time_y);
                 }
 
@@ -94,19 +105,24 @@ void ClockModule::show(DisplayThing& displayThing) {
                 std::string tz_str = m_config.timezone.c_str();
                 std::replace(tz_str.begin(), tz_str.end(), '_', ' ');
                 drawCenteredString(displayThing, tz_str.c_str(), &FreeSans9pt7b, timezone_y);
-
-            } else {
+            }
+            else
+            {
                 drawCenteredString(displayThing, "Waiting for time sync...", &FreeSansBold12pt7b, 80);
             }
-        } else {
+        }
+        else
+        {
             drawCenteredString(displayThing, "Clock Not Configured", &FreeSansBold12pt7b, 60);
             drawCenteredString(displayThing, "Please set your timezone", &FreeSans9pt7b, 90);
             drawCenteredString(displayThing, "in the web portal.", &FreeSans9pt7b, 110);
         }
-    } while (display.nextPage());
+    }
+    while (display.nextPage());
 }
 
-void drawCenteredString(DisplayThing& displayThing, const char* text, const GFXfont* font, const int y) {
+void drawCenteredString(DisplayThing& displayThing, const char* text, const GFXfont* font, const int y)
+{
     auto& display = displayThing.getDisplay();
 
     int16_t x1, y1;

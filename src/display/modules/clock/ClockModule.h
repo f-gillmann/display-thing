@@ -1,7 +1,7 @@
 #pragma once
 
 #include "display/modules/Module.h"
-#include <ctime>
+#include "ezTime.h"
 
 class ClockModule final : public Module {
 public:
@@ -13,9 +13,9 @@ public:
 private:
     DeviceConfig m_config;
     bool m_isConfigured = false;
-    tm m_timeInfo{};
+    tm m_timeInfo;
 
     // buffers to hold the formatted time and date strings
     char m_timeString[9]{};    // e.g., "23:01" or "11:01"
-    char m_dateString[25]{};   // e.g., "Friday, August 08"
+    char m_dateString[30]{};   // e.g., "Friday, August 08"
 };

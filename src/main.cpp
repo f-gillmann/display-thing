@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "DisplayThing.h"
+#include "ezTime.h"
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
 #include "display/screens/wifi_setup/WiFiSetupScreen.h"
@@ -48,6 +49,9 @@ void setup()
     if (isConnected)
     {
         Serial.printf("Connected. IP: %s\n", WiFi.localIP().toString().c_str());
+
+        // start ntp
+        waitForSync();
 
         // register configuration website handlers and start webserver
         configManager->registerHandlers();
