@@ -1,7 +1,7 @@
 #include "WiFiSetupManager.h"
 
 #include <WiFi.h>
-#include "web/wifi_setup_portal.html.h"
+#include "display/web/wifi_setup_portal.html.h"
 #include <vector>
 #include <algorithm>
 

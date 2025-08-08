@@ -133,7 +133,8 @@
             margin: 0;
         }
 
-        input[type='text']::placeholder {
+        input[type='text']::placeholder,
+        input[type='number']::placeholder {
             color: var(--overlay2);
         }
 
@@ -142,6 +143,23 @@
         select:focus {
             outline: none;
             border-color: var(--blue);
+        }
+
+        .interval-input-group {
+            display: flex;
+        }
+
+        .interval-input-group input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: 0;
+            flex-grow: 1;
+        }
+
+        .interval-input-group select {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            width: auto;
         }
 
         .radio-group {
@@ -659,26 +677,15 @@
                     Configure the global settings for the display panel.
                 </p>
                 <div class="form-group">
-                    <label for="interval">Update Interval</label>
-                    <select id="interval" name="interval">
-                        <option value="60000">1 minute</option>
-                        <option value="90000">1 minute 30 seconds</option>
-                        <option value="120000">2 minutes</option>
-                        <option value="150000">2 minutes 30 seconds</option>
-                        <option value="180000">3 minutes</option>
-                        <option value="210000">3 minutes 30 seconds</option>
-                        <option value="240000">4 minutes</option>
-                        <option value="270000">4 minutes 30 seconds</option>
-                        <option value="300000">5 minutes</option>
-                        <option value="360000">6 minutes</option>
-                        <option value="420000">7 minutes</option>
-                        <option value="480000">8 minutes</option>
-                        <option value="540000">9 minutes</option>
-                        <option value="600000">10 minutes</option>
-                        <option value="900000">15 minutes</option>
-                        <option value="1200000">20 minutes</option>
-                        <option value="1800000">30 minutes</option>
-                    </select>
+                    <label for="interval_display">Update Interval</label>
+                    <div class="interval-input-group">
+                        <input type="number" id="interval_display" value="60" min="1">
+                        <select id="interval_unit">
+                            <option value="seconds">Seconds</option>
+                            <option value="minutes">Minutes</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="interval" name="interval" value="60000">
                 </div>
                 <div class="form-group">
                     <label>Unit System</label>
@@ -971,15 +978,51 @@
         }
     });
 
-    function populateForm(cfg) {
-        const fieldMappings = {
-            'interval': 'interval',
-            'weather_lat': 'weather-lat',
-            'weather_lon': 'weather-lon',
-            'weather_apikey': 'weather-apikey'
-        };
+    const intervalDisplay = document.getElementById('interval_display');
+    const intervalUnit = document.getElementById('interval_unit');
+    const hiddenInterval = document.getElementById('interval');
 
+    function updateHiddenInterval() {
+        const value = parseFloat(intervalDisplay.value) || 0;
+        const unit = intervalUnit.value;
+        let ms = 0;
+
+        if (unit === 'seconds') {
+            ms = value * 1000;
+        } else if (unit === 'minutes') {
+            ms = value * 60000;
+        }
+        hiddenInterval.value = ms;
+    }
+
+    if(intervalDisplay && intervalUnit) {
+        intervalDisplay.addEventListener('input', updateHiddenInterval);
+        intervalUnit.addEventListener('change', updateHiddenInterval);
+    }
+
+
+    function populateForm(cfg) {
         if (cfg.settings) {
+            if (cfg.settings.hasOwnProperty('interval')) {
+                const ms = parseInt(cfg.settings.interval, 10);
+                if (!isNaN(ms) && hiddenInterval && intervalDisplay && intervalUnit) {
+                    hiddenInterval.value = ms;
+                    if (ms >= 60000 && ms % 60000 === 0) {
+                        intervalUnit.value = 'minutes';
+                        intervalDisplay.value = ms / 60000;
+                    } else {
+                        intervalUnit.value = 'seconds';
+                        intervalDisplay.value = ms / 1000;
+                    }
+                }
+            }
+
+            const fieldMappings = {
+                'weather_lat': 'weather-lat',
+                'weather_lon': 'weather-lon',
+                'weather_apikey': 'weather-apikey'
+            };
+
             for (const key in fieldMappings) {
                 if (cfg.settings.hasOwnProperty(key)) {
                     const elementId = fieldMappings[key];

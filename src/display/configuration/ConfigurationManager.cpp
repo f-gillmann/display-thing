@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 #include "config.h"
 #include "display/DisplayManager.h"
-#include "web/configuration_portal.html.h"
+#include "display/web/configuration_portal.html.h"
 
 ConfigurationManager::ConfigurationManager(DisplayThing& displayThing) : displayThing(displayThing)
 {
@@ -29,12 +29,12 @@ void ConfigurationManager::loadConfiguration()
     // keys can't be too long since there is a length limit.
 
     // load general settings
-    m_config.interval = preferences.getUInt("interval", 30000);
+    m_config.interval = preferences.getUInt("interval", 60000);
     m_config.units = preferences.getString("units", "metric").c_str();
 
     // load weather settings
-    m_config.weather_lat = preferences.getFloat("w_lat", 50.77f); // Default to Haiger
-    m_config.weather_lon = preferences.getFloat("w_lon", 8.20f);
+    m_config.weather_lat = preferences.getFloat("w_lat", 51.16f);
+    m_config.weather_lon = preferences.getFloat("w_lon", 10.45f);
     m_config.weather_service = preferences.getString("w_svc", "openmeteo");
     m_config.weather_apikey = preferences.getString("w_key", "");
 
@@ -89,7 +89,7 @@ void ConfigurationManager::registerHandlers()
 
             if (interval <= 0)
             {
-                interval = 30;
+                interval = 60000;
             }
 
             preferences.putUInt("interval", interval);

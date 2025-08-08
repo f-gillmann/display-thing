@@ -28,7 +28,7 @@ def compress_web_files(source, target, env):
 
 env.Append(BUILDERS={"Compress": Builder(action=compress_web_files)})
 
-web_dir = os.path.join(env.subst("$PROJECT_SRC_DIR"), "web")
+web_dir = os.path.join(env.subst("$PROJECT_SRC_DIR"), "display", "web")
 html_files = glob.glob(os.path.join(web_dir, "*.html"))
 
 for html_path in html_files:
