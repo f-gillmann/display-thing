@@ -1,16 +1,11 @@
 #include <Arduino.h>
 #include "config.h"
 #include "DisplayThing.h"
+#include "util.hpp"
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
 #include "display/screens/wifi_setup/WiFiSetupScreen.h"
 #include "display/wifi/WiFiSetupManager.h"
-
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 std::unique_ptr<DisplayThing> displayThing;
 std::unique_ptr<WiFiSetupManager> wifiSetupManager;
