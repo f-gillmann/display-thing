@@ -38,5 +38,5 @@ jobs:
       - name: Upload Firmware
         uses: actions/upload-artifact@v4
         with:
-          name: display-thing-fw.bin
+          name: display-thing-fw
           path: .pio/build/esp32dev/firmware.bin
