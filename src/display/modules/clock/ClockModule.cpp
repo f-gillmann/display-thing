@@ -1,5 +1,5 @@
 #include "ClockModule.h"
-#include <time.h>
+#include <ctime>
 #include <string>
 #include <algorithm>
 #include "Fonts/FreeSans9pt7b.h"
