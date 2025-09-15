@@ -26,7 +26,7 @@ void setup()
     wifiSetupManager = make_unique<WiFiSetupManager>(*displayThing);
     configManager = make_unique<ConfigurationManager>(*displayThing);
     timeManager = make_unique<TimeManager>(ntpClient, *configManager);
-    displayManager = make_unique<DisplayManager>(*displayThing);
+    displayManager = make_unique<DisplayManager>(*displayThing, *timeManager);
 
     configManager->logConfiguration();
 

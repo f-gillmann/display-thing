@@ -4,17 +4,8 @@
 #include "modules/weather/WeatherModule.h"
 #include "screens/welcome/WelcomeScreen.h"
 
-std::unique_ptr<Screen> createModule(const std::string& name)
-{
-    if (name == "weather")
-        return make_unique<WeatherModule>();
-    if (name == "clock")
-        return make_unique<ClockModule>();
-
-    return nullptr;
-}
-
-DisplayManager::DisplayManager(DisplayThing& displayThing) : displayThing(displayThing)
+DisplayManager::DisplayManager(DisplayThing& displayThing, TimeManager& timeManager)
+    : displayThing(displayThing), m_timeManager(timeManager)
 {
 }
 
@@ -87,4 +78,14 @@ unsigned int DisplayManager::getCurrentModuleDuration(const DeviceConfig& device
     }
 
     return 60000;
+}
+
+std::unique_ptr<Screen> DisplayManager::createModule(const std::string& name) const
+{
+    if (name == "weather")
+        return make_unique<WeatherModule>();
+    if (name == "clock")
+            return make_unique<ClockModule>(m_timeManager);
+
+    return nullptr;
 }
