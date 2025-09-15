@@ -710,8 +710,8 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="timezone">Timezone</label>
-                    <select id="timezone" name="timezone"></select>
+                    <label for="time_offset">Time Offset (UTC)</label>
+                    <input type="number" id="time_offset" name="time_offset" placeholder="e.g., 2 for CEST" step="0.5">
                 </div>
             </div>
             <div class="page" id="clock">
@@ -1027,33 +1027,6 @@
         intervalUnit.addEventListener('change', updateHiddenInterval);
     }
 
-    function populateTimezones() {
-        const timezoneSelect = document.getElementById('timezone');
-        if (!timezoneSelect) return;
-
-        try {
-            const timezones = Intl.supportedValuesOf('timeZone');
-            const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-            timezones.forEach(tz => {
-                const option = document.createElement('option');
-                option.value = tz;
-                option.textContent = tz.replace(/_/g, ' ');
-                timezoneSelect.appendChild(option);
-            });
-
-            if (timezones.includes(browserTz)) {
-                timezoneSelect.value = browserTz;
-            }
-        } catch (e) {
-            console.error("Could not populate timezones:", e);
-            const option = document.createElement('option');
-            option.value = 'UTC';
-            option.textContent = 'UTC';
-            timezoneSelect.appendChild(option);
-        }
-    }
-
     function populateForm(cfg) {
         if (cfg.settings) {
             if (cfg.settings.hasOwnProperty('interval')) {
@@ -1070,10 +1043,10 @@
                 }
             }
 
-            if (cfg.settings.hasOwnProperty('timezone')) {
-                const timezoneSelect = document.getElementById('timezone');
-                if (timezoneSelect) {
-                    timezoneSelect.value = cfg.settings.timezone;
+            if (cfg.settings.hasOwnProperty('time_offset')) {
+                const timeOffsetInput = document.getElementById('time_offset');
+                if (timeOffsetInput) {
+                    timeOffsetInput.value = cfg.settings.time_offset;
                 }
             }
 
@@ -1125,7 +1098,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        populateTimezones();
         fetch('/get_config')
             .then(response => {
                 if (!response.ok) {

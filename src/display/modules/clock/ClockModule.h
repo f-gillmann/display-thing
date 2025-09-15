@@ -1,20 +1,23 @@
 #pragma once
 
 #include "display/modules/Module.h"
+#include "display/time/TimeManager.h"
 
-class ClockModule final : public Module {
+class ClockModule final : public Module
+{
 public:
-    explicit ClockModule();
-    void show(DisplayThing& displayThing) override;
+    explicit ClockModule(TimeManager& timeManager);
+
     void setConfig(const DeviceConfig& deviceConfig) override;
     void update() override;
+    void show(DisplayThing& displayThing) override;
 
 private:
+    TimeManager& m_timeManager;
     DeviceConfig m_config;
-    bool m_isConfigured = false;
-    tm m_timeInfo;
 
-    // buffers to hold the formatted time and date strings
-    char m_timeString[9]{};    // e.g., "23:01" or "11:01"
-    char m_dateString[30]{};   // e.g., "Friday, August 08"
+    tm m_timeInfo{};
+    char m_timeString[9]{};
+    char m_dateString[32]{};
+    bool m_hasTime = false;
 };

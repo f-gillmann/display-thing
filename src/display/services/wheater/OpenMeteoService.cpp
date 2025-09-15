@@ -47,7 +47,7 @@ WeatherData OpenMeteoService::fetchWeatherData(
     }
     else
     {
-        Serial.printf("HTTP GET failed, error: %s\n", http.errorToString(httpCode).c_str());
+        Serial.printf("HTTP GET failed, error: %s\n", HTTPClient::errorToString(httpCode).c_str());
     }
 
     http.end();

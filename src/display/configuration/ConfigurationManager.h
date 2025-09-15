@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <string>
 #include <vector>
 #include <WString.h>
 
@@ -18,7 +17,7 @@ struct DeviceConfig
     unsigned int interval;
     String units;
     String clock_format;
-    String timezone;
+    unsigned int time_offset;
     float weather_lat;
     float weather_lon;
     String weather_service;
@@ -36,6 +35,7 @@ public:
     const DeviceConfig& getConfig() const;
     void registerHandlers();
     void loadConfiguration();
+    void logConfiguration() const;
 
 private:
     DisplayThing& displayThing;

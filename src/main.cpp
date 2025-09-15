@@ -5,27 +5,38 @@
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
 #include "display/screens/wifi_setup/WiFiSetupScreen.h"
+#include "display/time/TimeManager.h"
 #include "display/wifi/WiFiSetupManager.h"
 
 std::unique_ptr<DisplayThing> displayThing;
 std::unique_ptr<WiFiSetupManager> wifiSetupManager;
 std::unique_ptr<ConfigurationManager> configManager;
 std::unique_ptr<DisplayManager> displayManager;
+std::unique_ptr<TimeManager> timeManager;
 
 bool isConnected = false;
 unsigned long lastUpdate = 0;
+
+WiFiUDP ntpUDP;
+NTPClient ntpClient(ntpUDP, "pool.ntp.org");
 
 void setup()
 {
     displayThing = make_unique<DisplayThing>();
     wifiSetupManager = make_unique<WiFiSetupManager>(*displayThing);
     configManager = make_unique<ConfigurationManager>(*displayThing);
+    timeManager = make_unique<TimeManager>(ntpClient, *configManager);
     displayManager = make_unique<DisplayManager>(*displayThing);
 
+    configManager->logConfiguration();
+
+    // listener for config changes, update the screen and
+    // log new config as soon as the config updates
     configManager->onConfigChanged(
         [&](const DeviceConfig& newConfig)
         {
             Serial.println("Configuration updated. Rebuilding display queue.");
+            configManager->logConfiguration();
             displayManager->buildQueue(newConfig);
             lastUpdate = 0;
         }
@@ -47,6 +58,9 @@ void setup()
         // register configuration website handlers and start webserver
         configManager->registerHandlers();
         displayThing->getWebServer().begin();
+
+        // start time manager
+        timeManager->begin();
 
         // build the module queue from our saved configuration
         displayManager->buildQueue(configManager->getConfig());
@@ -71,6 +85,10 @@ void loop()
         const DeviceConfig& currentConfig = configManager->getConfig();
         const unsigned int current_duration = displayManager->getCurrentModuleDuration(currentConfig);
 
+        // update time
+        ntpClient.update();
+
+        // main loop for our modules
         if (millis() - lastUpdate > current_duration || lastUpdate == 0)
         {
             if (lastUpdate != 0)

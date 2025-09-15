@@ -32,7 +32,7 @@ void ConfigurationManager::loadConfiguration()
     m_config.interval = preferences.getUInt("in", 60000); // interval
     m_config.units = preferences.getString("un", "metric").c_str(); // units
     m_config.clock_format = preferences.getString("cl_fo", "24"); // clock_format
-    m_config.timezone = preferences.getString("tz", "UTC"); // timezone
+    m_config.time_offset = preferences.getUInt("toff", 0); // time offset
 
     // load weather settings
     m_config.weather_lat = preferences.getFloat("w_lat", 0.0f); // weather_lat
@@ -66,6 +66,43 @@ void ConfigurationManager::loadConfiguration()
     }
 }
 
+void ConfigurationManager::logConfiguration() const
+{
+    Serial.println(F("\n--- Current Configuration ---"));
+
+    Serial.println(F("\n[General]"));
+    Serial.printf("Update Interval: %u\n", m_config.interval);
+    Serial.printf("Units: %s\n", m_config.units.c_str());
+    Serial.printf("Clock Format: %s\n", m_config.clock_format.c_str());
+    Serial.printf("Time Offset: %u\n", m_config.time_offset);
+
+    Serial.println(F("\n[Weather]"));
+    Serial.printf("  Latitude: %f\n", m_config.weather_lat);
+    Serial.printf("  Longitude: %f\n", m_config.weather_lon);
+    Serial.printf("  Service: %s\n", m_config.weather_service.c_str());
+    Serial.printf("  API Key: %s\n", m_config.weather_apikey.isEmpty() ? "Not Set" : "Set");
+
+    Serial.println(F("\n[Queue Items]"));
+
+    if (m_config.queue.empty())
+    {
+        Serial.println("  Queue is empty.");
+    }
+    else
+    {
+        int itemIndex = 0;
+        for (const auto& item : m_config.queue)
+        {
+            Serial.printf("  [%d] Name: %s, Duration: %u\n",
+                          itemIndex++,
+                          item.name.c_str(),
+                          item.duration);
+        }
+    }
+
+    Serial.println(F("-----------------------------\n"));
+}
+
 void ConfigurationManager::registerHandlers()
 {
     auto& server = displayThing.getWebServer();
@@ -97,7 +134,7 @@ void ConfigurationManager::registerHandlers()
             preferences.putUInt("in", interval); // interval
             preferences.putString("un", server.arg("units").c_str()); // units
             preferences.putString("cl_fo", server.arg("clock_format").c_str()); // clock_format
-            preferences.putString("tz", server.arg("timezone").c_str()); // timezone
+            preferences.putString("toff", server.arg("time_offset").c_str()); // time offset
 
             preferences.putFloat("w_lat", server.arg("weather_lat").toFloat()); // weather_lat
             preferences.putFloat("w_lon", server.arg("weather_lon").toFloat()); // weather_lon
@@ -155,7 +192,7 @@ void ConfigurationManager::registerHandlers()
             settings["interval"] = cfg.interval;
             settings["units"] = cfg.units;
             settings["clock_format"] = cfg.clock_format;
-            settings["timezone"] = cfg.timezone;
+            settings["time_offset"] = cfg.time_offset;
             settings["weather_lat"] = cfg.weather_lat;
             settings["weather_lon"] = cfg.weather_lon;
             settings["weather_service"] = cfg.weather_service;
