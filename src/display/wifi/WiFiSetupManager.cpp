@@ -102,11 +102,17 @@ void WiFiSetupManager::startAP()
         }
     );
 
-    // send not found to prevent warnings in serial
     server.on(
         "/favicon.ico", [&]()
         {
             server.send(204);
+        }
+    );
+
+    server.onNotFound(
+        [&]()
+        {
+            server.send(404, "text/plain", "Not found");
         }
     );
 

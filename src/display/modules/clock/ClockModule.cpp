@@ -20,18 +20,15 @@ void ClockModule::update()
 {
     const NTPClient& ntpClient = m_timeManager.getTimeClient();
 
-    // check if the Unix epoch time is recent, indicating a successful sync.
+    // check if the unix epoch time is recent, indicating a successful sync.
     // (1757800000 = Sat Sep 13 2025 21:46:40 GMT+0000).
     if (ntpClient.getEpochTime() > 1757800000L)
     {
         if (!m_hasTime)
-        {
             m_hasTime = true;
-            Serial.println("ClockModule: Time has been synchronized.");
-        }
 
         const auto raw_time = static_cast<time_t>(ntpClient.getEpochTime());
-        m_timeInfo = *gmtime(&raw_time); // Use gmtime as the offset is already applied by NTPClient
+        m_timeInfo = *gmtime(&raw_time);
 
         const char* time_fmt = (m_config.clock_format == "12") ? "%I:%M" : "%H:%M";
         strftime(m_timeString, sizeof(m_timeString), time_fmt, &m_timeInfo);
@@ -40,7 +37,7 @@ void ClockModule::update()
     else
     {
         m_hasTime = false;
-        m_timeString[0] = '\0'; // Clear strings if we don't have a valid time
+        m_timeString[0] = '\0'; // clear strings if we don't have a valid time
     }
 }
 
@@ -94,9 +91,10 @@ void ClockModule::show(DisplayThing& displayThing)
             drawCenteredString(displayThing, m_dateString, &FreeSansBold12pt7b, date_y);
 
             char tz_str[12];
-            const long offset_sec = static_cast<long>(m_config.time_offset);
+            const long offset_sec = m_config.time_offset;
             const int hours = offset_sec / 3600;
             const int minutes = (offset_sec % 3600) / 60;
+
             snprintf(tz_str, sizeof(tz_str), "UTC%+03d:%02d", hours, abs(minutes));
             drawCenteredString(displayThing, tz_str, &FreeSans9pt7b, timezone_y);
         }

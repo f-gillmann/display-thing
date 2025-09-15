@@ -22,27 +22,31 @@ NTPClient ntpClient(ntpUDP, "pool.ntp.org");
 
 void setup()
 {
+    Serial.begin(115200);
+
     displayThing = make_unique<DisplayThing>();
     wifiSetupManager = make_unique<WiFiSetupManager>(*displayThing);
     configManager = make_unique<ConfigurationManager>(*displayThing);
     timeManager = make_unique<TimeManager>(ntpClient, *configManager);
     displayManager = make_unique<DisplayManager>(*displayThing, *timeManager);
 
-    configManager->logConfiguration();
-
     // listener for config changes, update the screen and
     // log new config as soon as the config updates
     configManager->onConfigChanged(
         [&](const DeviceConfig& newConfig)
         {
-            Serial.println("Configuration updated. Rebuilding display queue.");
+            Serial.println("Configuration updated. Forcing immediate redraw.");
             configManager->logConfiguration();
+
             displayManager->buildQueue(newConfig);
-            lastUpdate = 0;
+
+            displayManager->updateCurrentModule();
+            displayManager->showCurrentModule();
+
+            lastUpdate = millis();
+            displayThing->getDisplay().hibernate();
         }
     );
-
-    Serial.begin(115200);
 
     auto& display = displayThing->getDisplay();
     SPI.begin(EPD_SCK, EPD_MISO, EPD_MOSI);

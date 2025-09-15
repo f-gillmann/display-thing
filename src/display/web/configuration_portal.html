@@ -679,17 +679,6 @@
                     Configure the global settings for the display panel.
                 </p>
                 <div class="form-group">
-                    <label for="interval_display">Update Interval</label>
-                    <div class="interval-input-group">
-                        <input type="number" id="interval_display" value="60" min="1">
-                        <select id="interval_unit">
-                            <option value="seconds">Seconds</option>
-                            <option value="minutes">Minutes</option>
-                        </select>
-                    </div>
-                    <input type="hidden" id="interval" name="interval" value="60000">
-                </div>
-                <div class="form-group">
                     <label>Unit System</label>
                     <div class="radio-group">
                         <input type="radio" id="metric" name="units" value="metric" checked>
@@ -710,14 +699,16 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="time_offset">Time Offset (UTC)</label>
-                    <input type="number" id="time_offset" name="time_offset" placeholder="e.g., 2 for CEST" step="0.5">
+                    <label for="timezone_select">Timezone</label>
+                    <select id="timezone_select" name="timezone"></select>
+                    <input type="hidden" id="time_offset" name="time_offset">
                 </div>
             </div>
             <div class="page" id="clock">
                 <h2>Clock Module</h2>
                 <p class="page-description">
-                    The clock module displays the current time. You can customize the time format in the global settings.
+                    The clock module displays the current time. You can customize the time format in the global
+                    settings.
                 </p>
             </div>
             <div class="page" id="weather">
@@ -810,7 +801,7 @@
             document.getElementById(this.dataset.page).classList.add('active');
 
             const parentDropdown = this.closest('.nav-dropdown');
-            if(parentDropdown) {
+            if (parentDropdown) {
                 parentDropdown.querySelector('.dropdown-toggle').classList.add('active-parent');
             }
         });
@@ -1005,49 +996,85 @@
         }
     });
 
-    const intervalDisplay = document.getElementById('interval_display');
-    const intervalUnit = document.getElementById('interval_unit');
-    const hiddenInterval = document.getElementById('interval');
+    const timezoneSelect = document.getElementById('timezone_select');
+    const timeOffsetInput = document.getElementById('time_offset');
 
-    function updateHiddenInterval() {
-        const value = parseFloat(intervalDisplay.value) || 0;
-        const unit = intervalUnit.value;
-        let ms = 0;
-
-        if (unit === 'seconds') {
-            ms = value * 1000;
-        } else if (unit === 'minutes') {
-            ms = value * 60000;
+    if (timezoneSelect && timeOffsetInput) {
+        function getGmtString(timeZone) {
+            try {
+                const formatter = new Intl.DateTimeFormat('en', {timeZone, timeZoneName: 'longOffset'});
+                const parts = formatter.formatToParts(new Date());
+                return parts.find(part => part.type === 'timeZoneName')?.value || 'GMT';
+            } catch (e) {
+                return 'GMT';
+            }
         }
-        hiddenInterval.value = ms;
-    }
 
-    if(intervalDisplay && intervalUnit) {
-        intervalDisplay.addEventListener('input', updateHiddenInterval);
-        intervalUnit.addEventListener('change', updateHiddenInterval);
+        const timezones = Intl.supportedValuesOf('timeZone');
+        const timezoneData = timezones.map(tz => {
+            const gmtString = getGmtString(tz);
+            const match = gmtString.match(/GMT([+-])(\d+)(?::(\d+))?/);
+            let offsetSeconds = 0;
+            if (match) {
+                const sign = match[1] === '-' ? -1 : 1;
+                const hours = parseInt(match[2], 10);
+                const minutes = match[3] ? parseInt(match[3], 10) : 0;
+                offsetSeconds = sign * (hours * 3600 + minutes * 60);
+            }
+            return {
+                name: tz,
+                offset: offsetSeconds,
+                label: `(${gmtString.replace('GMT', 'UTC')}) ${tz.replace(/_/g, ' ')}`
+            };
+        }).sort((a, b) => a.offset - b.offset || a.name.localeCompare(b.name));
+
+        timezoneData.forEach(tzInfo => {
+            const option = document.createElement('option');
+            option.value = tzInfo.name;
+            option.textContent = tzInfo.label;
+            option.dataset.offset = tzInfo.offset;
+            timezoneSelect.appendChild(option);
+        });
+
+        function updateHiddenTimeOffset() {
+            const selectedOption = timezoneSelect.options[timezoneSelect.selectedIndex];
+            if (selectedOption) {
+                timeOffsetInput.value = selectedOption.dataset.offset;
+            }
+        }
+
+        timezoneSelect.addEventListener('change', updateHiddenTimeOffset);
     }
 
     function populateForm(cfg) {
         if (cfg.settings) {
-            if (cfg.settings.hasOwnProperty('interval')) {
-                const ms = parseInt(cfg.settings.interval, 10);
-                if (!isNaN(ms) && hiddenInterval && intervalDisplay && intervalUnit) {
-                    hiddenInterval.value = ms;
-                    if (ms >= 60000 && ms % 60000 === 0) {
-                        intervalUnit.value = 'minutes';
-                        intervalDisplay.value = ms / 60000;
-                    } else {
-                        intervalUnit.value = 'seconds';
-                        intervalDisplay.value = ms / 1000;
-                    }
+            const timezoneSelect = document.getElementById('timezone_select');
+            const timeOffsetHiddenInput = document.getElementById('time_offset');
+
+            if (cfg.settings.hasOwnProperty('timezone') && cfg.settings.timezone) {
+                const savedTimezone = cfg.settings.timezone;
+                const optionToSelect = Array.from(timezoneSelect.options).find(opt => opt.value === savedTimezone);
+
+                if (optionToSelect) {
+                    optionToSelect.selected = true;
+                }
+            } else if (cfg.settings.hasOwnProperty('time_offset')) {
+                const offsetInSeconds = parseInt(cfg.settings.time_offset, 10);
+                const optionToSelect = Array.from(timezoneSelect.options).find(opt => parseInt(opt.dataset.offset, 10) === offsetInSeconds);
+                if (optionToSelect) {
+                    optionToSelect.selected = true;
+                }
+            } else {
+                const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const userOption = Array.from(timezoneSelect.options).find(opt => opt.value === userTimezone);
+                if (userOption) {
+                    userOption.selected = true;
                 }
             }
 
-            if (cfg.settings.hasOwnProperty('time_offset')) {
-                const timeOffsetInput = document.getElementById('time_offset');
-                if (timeOffsetInput) {
-                    timeOffsetInput.value = cfg.settings.time_offset;
-                }
+            const selectedOption = timezoneSelect.options[timezoneSelect.selectedIndex];
+            if (selectedOption) {
+                timeOffsetHiddenInput.value = selectedOption.dataset.offset;
             }
 
             if (cfg.settings.hasOwnProperty('clock_format')) {

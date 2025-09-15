@@ -17,7 +17,8 @@ struct DeviceConfig
     unsigned int interval;
     String units;
     String clock_format;
-    unsigned int time_offset;
+    int time_offset;
+    String timezone;
     float weather_lat;
     float weather_lon;
     String weather_service;
@@ -25,12 +26,11 @@ struct DeviceConfig
     std::vector<QueueItem> queue;
 };
 
-using ConfigChangeCallback = std::function<void(const DeviceConfig&)>;
-
 class ConfigurationManager
 {
 public:
     explicit ConfigurationManager(DisplayThing& displayThing);
+    using ConfigChangeCallback = std::function<void(const DeviceConfig&)>;
     void onConfigChanged(const ConfigChangeCallback& callback);
     const DeviceConfig& getConfig() const;
     void registerHandlers();
@@ -40,5 +40,5 @@ public:
 private:
     DisplayThing& displayThing;
     DeviceConfig m_config;
-    ConfigChangeCallback m_onConfigChangeCallback;
+    std::vector<ConfigChangeCallback> m_callbacks;
 };

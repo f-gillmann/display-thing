@@ -14,7 +14,8 @@ ConfigurationManager::ConfigurationManager(DisplayThing& displayThing) : display
 
 void ConfigurationManager::onConfigChanged(const ConfigChangeCallback& callback)
 {
-    m_onConfigChangeCallback = callback;
+    m_callbacks.push_back(callback);
+    Serial.printf("Registered onConfigChanged callback. Total=%u\n", (unsigned)m_callbacks.size());
 }
 
 const DeviceConfig& ConfigurationManager::getConfig() const
@@ -24,19 +25,21 @@ const DeviceConfig& ConfigurationManager::getConfig() const
 
 void ConfigurationManager::loadConfiguration()
 {
-    Preferences preferences;
-    preferences.begin(PREFERENCES_DEVICE_CONFIG);
+    Serial.println("Loading configuration...");
+
     // keys can't be too long since there is a length limit.
+    auto& preferences = displayThing.getPreferences();
+    preferences.begin(PREFERENCES_DEVICE_CONFIG);
 
     // load general settings
-    m_config.interval = preferences.getUInt("in", 60000); // interval
     m_config.units = preferences.getString("un", "metric").c_str(); // units
     m_config.clock_format = preferences.getString("cl_fo", "24"); // clock_format
-    m_config.time_offset = preferences.getUInt("toff", 0); // time offset
+    m_config.time_offset = preferences.getInt("toff", 0); // time_offset
+    m_config.timezone = preferences.getString("tz", "Europe/Berlin"); // timezone
 
     // load weather settings
-    m_config.weather_lat = preferences.getFloat("w_lat", 0.0f); // weather_lat
-    m_config.weather_lon = preferences.getFloat("w_lon", 0.0f); // weather_lon
+    m_config.weather_lat = preferences.getFloat("w_lat", 51.16f); // weather_lat
+    m_config.weather_lon = preferences.getFloat("w_lon", 10.45f); // weather_lon
     m_config.weather_service = preferences.getString("w_svc", "openmeteo"); // weather_service
     m_config.weather_apikey = preferences.getString("w_key", ""); // weather_apikey
 
@@ -60,9 +63,13 @@ void ConfigurationManager::loadConfiguration()
 
     preferences.end();
 
-    if (m_onConfigChangeCallback)
+    if (!m_callbacks.empty())
     {
-        m_onConfigChangeCallback(m_config);
+        Serial.printf("Configuration changed, firing %u callbacks.\n", (unsigned)m_callbacks.size());
+        for (auto& cb : m_callbacks)
+        {
+            cb(m_config);
+        }
     }
 }
 
@@ -70,11 +77,11 @@ void ConfigurationManager::logConfiguration() const
 {
     Serial.println(F("\n--- Current Configuration ---"));
 
-    Serial.println(F("\n[General]"));
-    Serial.printf("Update Interval: %u\n", m_config.interval);
+    Serial.println(F("[General]"));
     Serial.printf("Units: %s\n", m_config.units.c_str());
     Serial.printf("Clock Format: %s\n", m_config.clock_format.c_str());
-    Serial.printf("Time Offset: %u\n", m_config.time_offset);
+    Serial.printf("Time Offset: %i\n", m_config.time_offset);
+    Serial.printf("Timezone: %s\n", m_config.timezone.c_str());
 
     Serial.println(F("\n[Weather]"));
     Serial.printf("  Latitude: %f\n", m_config.weather_lat);
@@ -93,10 +100,12 @@ void ConfigurationManager::logConfiguration() const
         int itemIndex = 0;
         for (const auto& item : m_config.queue)
         {
-            Serial.printf("  [%d] Name: %s, Duration: %u\n",
-                          itemIndex++,
-                          item.name.c_str(),
-                          item.duration);
+            Serial.printf(
+                "  [%d] Name: %s, Duration: %u\n",
+                itemIndex++,
+                item.name.c_str(),
+                item.duration
+            );
         }
     }
 
@@ -131,10 +140,18 @@ void ConfigurationManager::registerHandlers()
                 interval = 60000;
             }
 
+            int time_offset = server.arg("time_offset").toInt();
+
+            if (!time_offset)
+            {
+                time_offset = 0;
+            }
+
             preferences.putUInt("in", interval); // interval
             preferences.putString("un", server.arg("units").c_str()); // units
             preferences.putString("cl_fo", server.arg("clock_format").c_str()); // clock_format
-            preferences.putString("toff", server.arg("time_offset").c_str()); // time offset
+            preferences.putInt("toff", time_offset); // time_offset
+            preferences.putString("tz", server.arg("timezone").c_str());
 
             preferences.putFloat("w_lat", server.arg("weather_lat").toFloat()); // weather_lat
             preferences.putFloat("w_lon", server.arg("weather_lon").toFloat()); // weather_lon
@@ -189,10 +206,10 @@ void ConfigurationManager::registerHandlers()
             JsonDocument doc;
 
             const JsonObject settings = doc["settings"].to<JsonObject>();
-            settings["interval"] = cfg.interval;
             settings["units"] = cfg.units;
             settings["clock_format"] = cfg.clock_format;
             settings["time_offset"] = cfg.time_offset;
+            settings["timezone"] = cfg.timezone;
             settings["weather_lat"] = cfg.weather_lat;
             settings["weather_lon"] = cfg.weather_lon;
             settings["weather_service"] = cfg.weather_service;
@@ -209,6 +226,20 @@ void ConfigurationManager::registerHandlers()
             String json;
             serializeJson(doc, json);
             server.send(200, "application/json", json);
+        }
+    );
+
+    server.on(
+        "/favicon.ico", [&]()
+        {
+            server.send(204);
+        }
+    );
+
+    server.onNotFound(
+        [&]()
+        {
+            server.send(404, "text/plain", "Not found");
         }
     );
 }
