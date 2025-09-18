@@ -14,7 +14,6 @@ struct QueueItem
 
 struct DeviceConfig
 {
-    unsigned int interval;
     String units;
     String clock_format;
     int time_offset;

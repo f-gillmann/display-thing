@@ -16,6 +16,7 @@ std::unique_ptr<TimeManager> timeManager;
 
 bool isConnected = false;
 unsigned long lastUpdate = 0;
+int lastMinute = -1;
 
 WiFiUDP ntpUDP;
 NTPClient ntpClient(ntpUDP, "pool.ntp.org");
@@ -95,19 +96,31 @@ void loop()
         // update time
         ntpClient.update();
 
+        const unsigned long currentMillis = millis();
+        const int currentMinute = ntpClient.getMinutes();
+
         // main loop for our modules
-        if (millis() - lastUpdate > current_duration || lastUpdate == 0)
+        if (currentMillis - lastUpdate > current_duration || lastUpdate == 0)
         {
+            // show next module
             if (lastUpdate != 0)
             {
                 displayManager->goToNextModule(currentConfig);
             }
 
-            Serial.println("Updating and showing current module.");
             displayManager->updateCurrentModule();
             displayManager->showCurrentModule();
 
-            lastUpdate = millis();
+            lastUpdate = currentMillis;
+            displayThing->getDisplay().hibernate();
+        }
+        else if (currentMinute != lastMinute && current_duration <= 60000)
+        {
+            // update current module, only do it if the module duration is above a minute
+            displayManager->updateCurrentModule();
+            displayManager->showCurrentModule();
+
+            lastMinute = currentMinute;
             displayThing->getDisplay().hibernate();
         }
     }
