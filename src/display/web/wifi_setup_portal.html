@@ -4,6 +4,7 @@
     <title>DisplayThing WiFi Setup</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <meta name="darkreader-lock">
+    <meta charset="utf-8">
     <style>
         :root {
             --base: #24273a;
@@ -18,6 +19,7 @@
             --blue: #8aadf4;
             --mauve: #c6a0f6;
             --sapphire: #7dc4e4;
+            --red: #ed8796;
         }
 
         html {
@@ -84,8 +86,13 @@
             border-radius: 8px;
             color: var(--text);
             font-size: 1rem;
-            transition: border-color 0.2s ease-in-out;
+            transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
             appearance: none;
+        }
+
+        input:disabled, select:disabled {
+            background-color: var(--surface1);
+            color: var(--overlay2);
         }
 
         select {
@@ -134,7 +141,7 @@
 <div class="container">
     <h1>WiFi Setup</h1>
     <p>Please select a network and enter the password.</p>
-    <form action='/save' method='POST'>
+    <form id="wifi-form" action='/save' method='POST'>
         <div class="form-group">
             <label for='ssid'>Network (SSID)</label>
             <select id='ssid' name='ssid'>
@@ -149,7 +156,9 @@
     </form>
     <script>
         window.addEventListener('load', function () {
+            const form = document.getElementById('wifi-form');
             const select = document.getElementById('ssid');
+            const passwordInput = document.getElementById('password-input');
             const saveButton = document.getElementById('save-button');
 
             fetch('/scan')
@@ -178,6 +187,43 @@
                     select.innerHTML = '<option value="">Scan failed</option>';
                     saveButton.disabled = true;
                 });
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                saveButton.disabled = true;
+                select.disabled = true;
+                passwordInput.disabled = true;
+                saveButton.textContent = 'Saving...';
+
+                const formData = new FormData(form);
+
+                fetch('/save', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.error || 'Unknown server error')
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Success:', data.message);
+                        document.querySelector('p').textContent = 'Success! Device is restarting to connect...';
+                        saveButton.textContent = 'Restarting...';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to save credentials: ' + error.message);
+                        saveButton.disabled = false;
+                        select.disabled = false;
+                        passwordInput.disabled = false;
+                        saveButton.textContent = 'Save & Connect';
+                    });
+            });
         });
     </script>
 </div>

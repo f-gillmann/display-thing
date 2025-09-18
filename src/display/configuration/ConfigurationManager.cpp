@@ -65,7 +65,6 @@ void ConfigurationManager::loadConfiguration()
 
     if (!m_callbacks.empty())
     {
-        Serial.printf("Configuration changed, firing %u callbacks.\n", (unsigned)m_callbacks.size());
         for (auto& cb : m_callbacks)
         {
             cb(m_config);
@@ -78,10 +77,10 @@ void ConfigurationManager::logConfiguration() const
     Serial.println(F("\n--- Current Configuration ---"));
 
     Serial.println(F("[General]"));
-    Serial.printf("Units: %s\n", m_config.units.c_str());
-    Serial.printf("Clock Format: %s\n", m_config.clock_format.c_str());
-    Serial.printf("Time Offset: %i\n", m_config.time_offset);
-    Serial.printf("Timezone: %s\n", m_config.timezone.c_str());
+    Serial.printf("  Units: %s\n", m_config.units.c_str());
+    Serial.printf("  Clock Format: %s\n", m_config.clock_format.c_str());
+    Serial.printf("  Time Offset: %i\n", m_config.time_offset);
+    Serial.printf("  Timezone: %s\n", m_config.timezone.c_str());
 
     Serial.println(F("\n[Weather]"));
     Serial.printf("  Latitude: %f\n", m_config.weather_lat);
@@ -109,7 +108,7 @@ void ConfigurationManager::logConfiguration() const
         }
     }
 
-    Serial.println(F("-----------------------------\n"));
+    Serial.println(F("-----------------------------"));
 }
 
 void ConfigurationManager::registerHandlers()
@@ -131,14 +130,19 @@ void ConfigurationManager::registerHandlers()
     server.on(
         "/save_config", HTTP_POST, [&]()
         {
-            preferences.begin(PREFERENCES_DEVICE_CONFIG);
-
-            int interval = server.arg("interval").toInt();
-
-            if (interval <= 0)
+            if (!preferences.begin(PREFERENCES_DEVICE_CONFIG))
             {
-                interval = 60000;
+                server.send(500, "application/json", R"({"error":"Could not open storage"})");
+                return;
             }
+
+            /*
+            if (!server.hasArg("timezone") || server.arg("timezone").isEmpty()) {
+                preferences.end();
+                server.send(400, "application/json", R"({"error":"Missing timezone"})");
+                return;
+            }
+            */
 
             int time_offset = server.arg("time_offset").toInt();
 
@@ -147,7 +151,6 @@ void ConfigurationManager::registerHandlers()
                 time_offset = 0;
             }
 
-            preferences.putUInt("in", interval); // interval
             preferences.putString("un", server.arg("units").c_str()); // units
             preferences.putString("cl_fo", server.arg("clock_format").c_str()); // clock_format
             preferences.putInt("toff", time_offset); // time_offset
@@ -193,9 +196,7 @@ void ConfigurationManager::registerHandlers()
             preferences.end();
             loadConfiguration();
 
-            const String response =
-                "<html><head><meta name=\"darkreader-lock\"><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}a{color:#8aadf4;}</style></head><body><h1>Configuration Saved!</h1><p>Your settings have been updated.</p><br/><a href='/'>Go back</a></body></html>";
-            server.send(200, "text/html", response);
+            server.send(200, "application/json", R"({"status":"success"})");
         }
     );
 

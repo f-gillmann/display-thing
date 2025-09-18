@@ -5,9 +5,10 @@
 #include <vector>
 #include <algorithm>
 
-static std::string generateRandomSSID() {
+static std::string generateRandomSSID()
+{
     static const std::vector<std::string> words = {
-        "loop", "wave", "garden", "river", "bridge", "maple", "temple",  "engine", "spire",
+        "loop", "wave", "garden", "river", "bridge", "maple", "temple", "engine", "spire",
         "matrix", "node", "stream", "branch", "portal", "frame", "shell", "thread", "core",
         "bonsai", "koi", "petal", "fern", "cluster", "pixel", "leaf", "shard", "ember"
     };
@@ -15,7 +16,7 @@ static std::string generateRandomSSID() {
     const int word1 = random(0, static_cast<int>(words.size()));
     const int word2 = random(0, static_cast<int>(words.size()));
 
-    std::string ssid = words[word1] + "-" +  words[word2];
+    std::string ssid = words[word1] + "-" + words[word2];
 
     // ensure lowercase, just in case
     std::transform(ssid.begin(), ssid.end(), ssid.begin(), ::tolower);
@@ -23,7 +24,9 @@ static std::string generateRandomSSID() {
     return ssid;
 }
 
-WiFiSetupManager::WiFiSetupManager(DisplayThing& displayThing) : displayThing(displayThing) { }
+WiFiSetupManager::WiFiSetupManager(DisplayThing& displayThing) : displayThing(displayThing)
+{
+}
 
 std::string WiFiSetupManager::getAPPassword() const
 {
@@ -40,6 +43,9 @@ void WiFiSetupManager::startAP()
     access_point_password = String(random(10000000, 100000000)).c_str();
     access_point_ssid = generateRandomSSID();
 
+    Serial.printf("AP SSID: %s\n", access_point_ssid.c_str());
+    Serial.printf("AP Password: %s\n", access_point_password.c_str());
+
     WiFiClass::mode(WIFI_AP);
     WiFi.softAP(access_point_ssid.c_str(), access_point_password.c_str(), 1, false, 1);
     WiFi.softAPConfig(ACCESS_POINT_IP, ACCESS_POINT_IP, IPAddress(255, 255, 255, 0));
@@ -51,10 +57,16 @@ void WiFiSetupManager::startAP()
     dnsServer.start(53, "*", ACCESS_POINT_IP);
     preferences.begin(PREFERENCES_WIFI_CONFIG); // don't start in readonly since nvs_open can fail
 
-    server.on("/", HTTP_GET, [&]() {
-        server.sendHeader("Content-Encoding", "gzip");
-        server.send_P(200, "text/html", reinterpret_cast<const char*>(WIFI_SETUP_PORTAL_HTML_GZ), WIFI_SETUP_PORTAL_HTML_GZ_LEN);
-    });
+    server.on(
+        "/", HTTP_GET, [&]()
+        {
+            server.sendHeader("Content-Encoding", "gzip");
+            server.send_P(
+                200, "text/html", reinterpret_cast<const char*>(WIFI_SETUP_PORTAL_HTML_GZ),
+                WIFI_SETUP_PORTAL_HTML_GZ_LEN
+            );
+        }
+    );
 
     server.on(
         "/scan", HTTP_GET, [&]()
@@ -89,10 +101,11 @@ void WiFiSetupManager::startAP()
                 preferences.putString("password", server.arg("password"));
                 preferences.end();
 
-                const String response = "<html><head><meta name=\"darkreader-lock\"><style>body{background-color:#1e2030;color:#cad3f5;font-family:sans-serif;text-align:center;padding-top:50px;}</style></head><body><h1>Credentials Saved!</h1><p>The device will now restart to connect to '" + ssid + "'.</p></body></html>";
-                server.send(200, "text/html", response);
+                server.send(
+                    200, "application/json", R"({"status":"success", "message":"Credentials saved. Restarting..."})"
+                );
 
-                delay(2000);
+                delay(1000);
                 ESP.restart();
             }
             else
@@ -116,10 +129,16 @@ void WiFiSetupManager::startAP()
         }
     );
 
-    server.onNotFound([&]() {
-        server.sendHeader("Content-Encoding", "gzip");
-        server.send_P(200, "text/html", reinterpret_cast<const char*>(WIFI_SETUP_PORTAL_HTML_GZ), WIFI_SETUP_PORTAL_HTML_GZ_LEN);
-    });
+    server.onNotFound(
+        [&]()
+        {
+            server.sendHeader("Content-Encoding", "gzip");
+            server.send_P(
+                200, "text/html", reinterpret_cast<const char*>(WIFI_SETUP_PORTAL_HTML_GZ),
+                WIFI_SETUP_PORTAL_HTML_GZ_LEN
+            );
+        }
+    );
 
     server.begin();
 }

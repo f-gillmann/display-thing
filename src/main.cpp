@@ -48,6 +48,9 @@ void setup()
         }
     );
 
+    // log current config
+    configManager->logConfiguration();
+
     auto& display = displayThing->getDisplay();
     SPI.begin(EPD_SCK, EPD_MISO, EPD_MOSI);
     display.init(115200, true, 2, false);

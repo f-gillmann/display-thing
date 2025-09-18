@@ -4,6 +4,7 @@
     <title>Display Thing Panel</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <meta name="darkreader-lock">
+    <meta charset="utf-8">
     <style>
         :root {
             /* Catppuccin Macchiato */
@@ -223,8 +224,13 @@
             transition: background-color 0.2s ease-in-out;
         }
 
-        button[type='submit']:hover {
+        button[type='submit']:hover:not(:disabled) {
             background-color: var(--teal);
+        }
+
+        button[type='submit']:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         .nav {
@@ -1125,6 +1131,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        // Fetch and populate the initial configuration
         fetch('/get_config')
             .then(response => {
                 if (!response.ok) {
@@ -1134,6 +1141,60 @@
             })
             .then(populateForm)
             .catch(error => console.error('Error loading config:', error));
+
+        const configForm = document.getElementById('config-form');
+        const saveButtons = document.querySelectorAll('.save-btn-desktop, .save-btn-mobile');
+
+        configForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            saveButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.textContent = 'Saving...';
+            });
+
+            const formData = new FormData(configForm);
+
+            fetch('/save_config', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Unknown server error');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Configuration saved successfully:', data);
+                    saveButtons.forEach(btn => {
+                        btn.style.backgroundColor = 'var(--blue)';
+                        btn.textContent = '✓ Saved!';
+                        setTimeout(() => {
+                            btn.style.backgroundColor = '';
+                            btn.textContent = 'Save Settings';
+                            btn.disabled = false;
+                            btn.blur();
+                        }, 3500);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error saving configuration:', error);
+                    alert(`Error saving settings: ${error.message}`);
+                    saveButtons.forEach(btn => {
+                        btn.style.backgroundColor = 'var(--red)';
+                        btn.textContent = 'Save Failed';
+                        setTimeout(() => {
+                            btn.style.backgroundColor = '';
+                            btn.textContent = 'Save Settings';
+                            btn.disabled = false;
+                            btn.blur();
+                        }, 5500);
+                    });
+                });
+        });
     });
 </script>
 </body>
