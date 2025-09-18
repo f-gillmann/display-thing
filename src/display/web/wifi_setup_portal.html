@@ -191,12 +191,12 @@
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
 
+                const formData = new FormData(form);
+
                 saveButton.disabled = true;
                 select.disabled = true;
                 passwordInput.disabled = true;
                 saveButton.textContent = 'Saving...';
-
-                const formData = new FormData(form);
 
                 fetch('/save', {
                     method: 'POST',
@@ -205,7 +205,7 @@
                     .then(response => {
                         if (!response.ok) {
                             return response.json().then(err => {
-                                throw new Error(err.error || 'Unknown server error')
+                                throw new Error(err.error || 'Unknown server error');
                             });
                         }
                         return response.json();

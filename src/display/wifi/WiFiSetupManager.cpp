@@ -55,7 +55,6 @@ void WiFiSetupManager::startAP()
     auto& server = displayThing.getWebServer();
 
     dnsServer.start(53, "*", ACCESS_POINT_IP);
-    preferences.begin(PREFERENCES_WIFI_CONFIG); // don't start in readonly since nvs_open can fail
 
     server.on(
         "/", HTTP_GET, [&]()
@@ -93,25 +92,43 @@ void WiFiSetupManager::startAP()
     server.on(
         "/save", HTTP_POST, [&]()
         {
-            const String ssid = server.arg("ssid");
-
-            if (ssid.length() > 0)
+            if (!preferences.begin(PREFERENCES_WIFI_CONFIG))
             {
-                preferences.putString("ssid", ssid);
-                preferences.putString("password", server.arg("password"));
-                preferences.end();
+                server.send(500, "application/json", R"({"error":"Could not open storage"})");
+                return;
+            }
 
-                server.send(
-                    200, "application/json", R"({"status":"success", "message":"Credentials saved. Restarting..."})"
-                );
+            if (server.hasArg("ssid") && server.hasArg("password"))
+            {
+                const String ssid = server.arg("ssid").c_str();
+                const String password = server.arg("password").c_str();
 
-                delay(1000);
-                ESP.restart();
+                if (ssid.length() > 0)
+                {
+                    preferences.putString("ssid", ssid);
+                    preferences.putString("password", password);
+                    preferences.end();
+
+                    server.send(
+                        200, "application/json", R"({"status":"success", "message":"Credentials saved. Restarting..."})"
+                    );
+
+                    delay(500);
+                    ESP.restart();
+                }
+                else
+                {
+                    server.send(400, "application/json", R"({"status":"error", "message":"SSID cannot be empty"})");
+                }
             }
             else
             {
-                server.send(400, "text/plain", "Bad Request");
+                server.send(
+                    400, "application/json", R"({"status":"error", "message":"Missing ssid or password parameters"})"
+                );
             }
+
+            preferences.end();
         }
     );
 
@@ -119,13 +136,6 @@ void WiFiSetupManager::startAP()
         "/favicon.ico", [&]()
         {
             server.send(204);
-        }
-    );
-
-    server.onNotFound(
-        [&]()
-        {
-            server.send(404, "text/plain", "Not found");
         }
     );
 
