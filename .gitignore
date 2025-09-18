@@ -1,3 +1,5 @@
 .pio/
 .idea/
+.venv/
+venv/
 *.FCBak
