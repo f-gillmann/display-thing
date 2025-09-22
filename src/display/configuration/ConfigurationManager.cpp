@@ -4,6 +4,7 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 #include "config.h"
+#include "Logger.hpp"
 #include "display/DisplayManager.h"
 #include "display/web/configuration_portal.html.h"
 
@@ -15,7 +16,6 @@ ConfigurationManager::ConfigurationManager(DisplayThing& displayThing) : display
 void ConfigurationManager::onConfigChanged(const ConfigChangeCallback& callback)
 {
     m_callbacks.push_back(callback);
-    Serial.printf("Registered onConfigChanged callback. Total=%u\n", (unsigned)m_callbacks.size());
 }
 
 const DeviceConfig& ConfigurationManager::getConfig() const
@@ -25,7 +25,7 @@ const DeviceConfig& ConfigurationManager::getConfig() const
 
 void ConfigurationManager::loadConfiguration()
 {
-    Serial.println("Loading configuration...");
+    LOG_INFO("Loading configuration...");
 
     // keys can't be too long since there is a length limit.
     auto& preferences = displayThing.getPreferences();
@@ -74,7 +74,7 @@ void ConfigurationManager::loadConfiguration()
 
 void ConfigurationManager::logConfiguration() const
 {
-    Serial.println(F("\n--- Current Configuration ---"));
+    Serial.println(F("--- Current Configuration ---"));
 
     Serial.println(F("[General]"));
     Serial.printf("  Units: %s\n", m_config.units.c_str());

@@ -1,4 +1,5 @@
 #include "TimeManager.h"
+#include "Logger.hpp"
 #include "display/configuration/ConfigurationManager.h"
 
 TimeManager::TimeManager(NTPClient& time_client, ConfigurationManager& config_manager)
@@ -25,6 +26,6 @@ NTPClient& TimeManager::getTimeClient() const
 
 void TimeManager::handleConfigChange(const DeviceConfig& config) const
 {
-    Serial.printf("[TimeManager] Applying time offset: %ud seconds\n", config.time_offset);
+    LOG_INFO("Applying time offset: %ud seconds", config.time_offset);
     m_timeClient.setTimeOffset(config.time_offset);
 }

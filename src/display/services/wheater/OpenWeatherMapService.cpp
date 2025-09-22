@@ -2,6 +2,8 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
+#include "Logger.hpp"
+
 WeatherData OpenWeatherMapService::fetchWeatherData(
     const float lat, const float lon, const std::string& apiKey, const std::string& units
 )
@@ -11,7 +13,7 @@ WeatherData OpenWeatherMapService::fetchWeatherData(
 
     if (apiKey.empty())
     {
-        Serial.println("OpenWeatherMap Error: API Key is not set.");
+        LOG_INFO("OpenWeatherMap Error: API Key is not set.");
         data.success = false;
         return data;
     }
@@ -21,7 +23,7 @@ WeatherData OpenWeatherMapService::fetchWeatherData(
         "&appid=" + String(apiKey.c_str()) +
         "&units=" + String(units.c_str());
 
-    Serial.println("Fetching weather from: " + url);
+    LOG_INFO("Fetching weather info...");
 
     http.begin(url);
     const int httpCode = http.GET();
@@ -42,14 +44,13 @@ WeatherData OpenWeatherMapService::fetchWeatherData(
             }
             else
             {
-                Serial.print("Error parsing JSON: ");
-                Serial.println(error.c_str());
+                LOG_ERROR("Error parsing JSON: %s", response.c_str());
             }
         }
     }
     else
     {
-        Serial.printf("HTTP GET failed, error: %s\n", HTTPClient::errorToString(httpCode).c_str());
+        LOG_ERROR("HTTP GET failed, error: %s\n", HTTPClient::errorToString(httpCode).c_str());
     }
 
     http.end();

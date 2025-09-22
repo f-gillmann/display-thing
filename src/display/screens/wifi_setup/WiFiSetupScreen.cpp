@@ -6,6 +6,8 @@
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 #include <Fonts/FreeSansBold9pt7b.h>
+
+#include "Logger.hpp"
 #include "display/DisplayManager.h"
 
 static GxEPD2_BW<GxEPD2_750_GDEY075T7, GxEPD2_750_GDEY075T7::HEIGHT>* g_current_display = nullptr;
@@ -22,7 +24,7 @@ static void draw_qr_code(const esp_qrcode_handle_t qrcode)
 
     if (size <= 0)
     {
-        Serial.println("Could not get QR Code size");
+        LOG_ERROR("Could not get QR Code size");
         return;
     }
 
@@ -125,7 +127,7 @@ void WiFiSetupScreen::show(DisplayThing& displayThing)
 
         if (qrcode_error != ESP_OK)
         {
-            Serial.printf("Failed to generate QR code: %s", esp_err_to_name(qrcode_error));
+            LOG_ERROR("Failed to generate QR code %s", esp_err_to_name(qrcode_error));
         }
 
         // credentials for access point
@@ -149,5 +151,5 @@ void WiFiSetupScreen::show(DisplayThing& displayThing)
     }
     while (display.nextPage());
 
-    Serial.println("Setup screen displayed.");
+    LOG_INFO("Setup screen displayed.");
 }

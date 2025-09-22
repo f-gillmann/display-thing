@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "Logger.hpp"
+
 static std::string generateRandomSSID()
 {
     static const std::vector<std::string> words = {
@@ -43,8 +45,8 @@ void WiFiSetupManager::startAP()
     access_point_password = String(random(10000000, 100000000)).c_str();
     access_point_ssid = generateRandomSSID();
 
-    Serial.printf("AP SSID: %s\n", access_point_ssid.c_str());
-    Serial.printf("AP Password: %s\n", access_point_password.c_str());
+    LOG_INFO("AP SSID: %s\n", access_point_ssid.c_str());
+    LOG_INFO("AP Password: %s\n", access_point_password.c_str());
 
     WiFiClass::mode(WIFI_AP);
     WiFi.softAP(access_point_ssid.c_str(), access_point_password.c_str(), 1, false, 1);

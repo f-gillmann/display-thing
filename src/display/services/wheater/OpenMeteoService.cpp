@@ -2,6 +2,8 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
+#include "Logger.hpp"
+
 WeatherData OpenMeteoService::fetchWeatherData(
     const float lat, const float lon, const std::string& apiKey, const std::string& units
 )
@@ -22,7 +24,7 @@ WeatherData OpenMeteoService::fetchWeatherData(
         url += "&temperature_unit=fahrenheit";
     }
 
-    Serial.println("Fetching weather from: " + url);
+    LOG_INFO("Fetching weather info...");
 
     http.begin(url.c_str());
     const int httpCode = http.GET();
@@ -42,12 +44,12 @@ WeatherData OpenMeteoService::fetchWeatherData(
         }
         else
         {
-            Serial.println("Error parsing JSON");
+            LOG_ERROR("Error parsing JSON");
         }
     }
     else
     {
-        Serial.printf("HTTP GET failed, error: %s\n", HTTPClient::errorToString(httpCode).c_str());
+        LOG_ERROR("HTTP GET failed, error: %s", HTTPClient::errorToString(httpCode).c_str());
     }
 
     http.end();

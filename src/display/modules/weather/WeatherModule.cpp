@@ -1,5 +1,6 @@
 #include "WeatherModule.h"
 
+#include "Logger.hpp"
 #include "util.hpp"
 #include "display/services/wheater/OpenMeteoService.h"
 #include "display/services/wheater/OpenWeatherMapService.h"
@@ -41,7 +42,7 @@ void WeatherModule::update()
 {
     if (!m_isConfigured || !m_weatherService) return;
 
-    Serial.println("WeatherModule: Updating data...");
+    LOG_INFO("Updating weather data...");
     m_weatherData = m_weatherService->fetchWeatherData(
         m_config.weather_lat,
         m_config.weather_lon,

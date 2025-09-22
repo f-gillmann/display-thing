@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "DisplayThing.h"
+#include "Logger.hpp"
 #include "util.hpp"
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
@@ -21,9 +22,17 @@ int lastMinute = -1;
 WiFiUDP ntpUDP;
 NTPClient ntpClient(ntpUDP, "pool.ntp.org");
 
+#ifndef DISABLE_DEBUG
+LoggerClass Logger;
+#endif
+
 void setup()
 {
     Serial.begin(115200);
+
+#ifndef DISABLE_DEBUG
+    Logger.begin(Serial, LogLevel::DEBUG);
+#endif
 
     displayThing = make_unique<DisplayThing>();
     wifiSetupManager = make_unique<WiFiSetupManager>(*displayThing);
@@ -36,7 +45,7 @@ void setup()
     configManager->onConfigChanged(
         [&](const DeviceConfig& newConfig)
         {
-            Serial.println("Configuration updated. Forcing immediate redraw.");
+            LOG_INFO("Configuration updated. Forcing immediate redraw.");
             configManager->logConfiguration();
 
             displayManager->buildQueue(newConfig);
@@ -61,7 +70,7 @@ void setup()
 
     if (isConnected)
     {
-        Serial.printf("Connected. IP: %s\n", WiFi.localIP().toString().c_str());
+        LOG_INFO("Connected. IP: %s", WiFi.localIP().toString().c_str());
 
         // register configuration website handlers and start webserver
         configManager->registerHandlers();
@@ -75,7 +84,7 @@ void setup()
     }
     else
     {
-        Serial.println("Not connected. Starting configuration portal.");
+        LOG_ERROR("Failed to connect to WiFi network, starting configuration portal");
         std::string ap_password = wifiSetupManager->getAPPassword();
         std::string ap_ssid = wifiSetupManager->getAPSsid();
         const auto wifiScreen = make_unique<WiFiSetupScreen>(ap_ssid, ap_password);
@@ -114,7 +123,7 @@ void loop()
             lastUpdate = currentMillis;
             displayThing->getDisplay().hibernate();
         }
-        else if (currentMinute != lastMinute && current_duration <= 60000)
+        else if (currentMinute != lastMinute && current_duration > 60000)
         {
             // update current module, only do it if the module duration is above a minute
             displayManager->updateCurrentModule();
