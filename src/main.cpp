@@ -83,14 +83,6 @@ void setup()
         // build the module queue from our saved configuration
         displayManager->buildQueue(configManager->getConfig());
     }
-    else
-    {
-        LOG_ERROR("Failed to connect to WiFi network, starting configuration portal");
-        std::string ap_password = wifiSetupManager->getAPPassword();
-        std::string ap_ssid = wifiSetupManager->getAPSsid();
-        const auto wifiScreen = make_unique<WiFiSetupScreen>(ap_ssid, ap_password);
-        wifiScreen->show(*displayThing);
-    }
 }
 
 void loop()

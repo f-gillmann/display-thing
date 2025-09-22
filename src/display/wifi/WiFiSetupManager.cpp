@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "util.hpp"
 #include "display/screens/wifi_reconnect/WiFiReconnectScreen.h"
+#include "display/screens/wifi_setup/WiFiSetupScreen.h"
 
 static std::string generateRandomSSID()
 {
@@ -183,18 +184,32 @@ bool WiFiSetupManager::attemptConnection() const
 
 bool WiFiSetupManager::connect()
 {
+    auto& preferences = displayThing.getPreferences();
+    preferences.begin(PREFERENCES_WIFI_CONFIG, true);
+    const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
+    preferences.end();
+
     if (attemptConnection())
     {
         return true;
     }
 
+    if (!hasCredentials) {
+        std::string ap_ssid = getAPSsid();
+        std::string ap_password = getAPPassword();
+
+        const auto setupScreen = make_unique<WiFiSetupScreen>(ap_ssid, ap_password);
+        setupScreen->show(displayThing);
+    }
+
     startAP();
+
     return false;
 }
 
 void WiFiSetupManager::handleClient() const
 {
-    if (WiFi.getMode() == WIFI_AP || WiFi.getMode() == WIFI_AP_STA)
+    if (WiFi.getMode() == WIFI_AP)
     {
         displayThing.getDnsServer().processNextRequest();
         displayThing.getWebServer().handleClient();
@@ -208,49 +223,41 @@ bool WiFiSetupManager::manageConnection()
     const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
     preferences.end();
 
-    // we have no credentials or failed to reconnect too many times
-    if (!hasCredentials || reconnectAttempts >= maxReconnectAttempts)
+    // start AP if needed
+    if ((!hasCredentials || reconnectAttempts >= maxReconnectAttempts) && WiFi.getMode() != WIFI_AP)
     {
-        if (reconnectAttempts >= maxReconnectAttempts)
-        {
-            LOG_ERROR(
-                "Failed to reconnect after %d attempts. Starting configuration portal.", maxReconnectAttempts
-            );
+        LOG_INFO("Starting configuration portal");
+        startAP();
 
-            // only display the screen once and keep it from changing passwords over and over again
-            if (WiFi.getMode() != WIFI_AP && WiFi.getMode() != WIFI_AP_STA)
-            {
-                startAP();
+        std::string ap_ssid = getAPSsid();
+        std::string ap_password = getAPPassword();
 
-                std::string ap_password = getAPPassword();
-                std::string ap_ssid = getAPSsid();
-                const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
-                reconnectScreen->show(displayThing);
-            }
-
-            reconnectAttempts = 0;
-        }
-
-        handleClient();
-        return false;
+        const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
+        reconnectScreen->show(displayThing);
     }
 
-    // we have credentials but are currently disconnected - try to reconnect
-    const unsigned long currentMillis = millis();
-    if (currentMillis - lastReconnectAttempt > reconnectInterval)
+    handleClient();
+
+    // try reconnection if we have credentials
+    if (hasCredentials && WiFi.getMode() != WIFI_AP)
     {
-        LOG_INFO("Attempting to reconnect to WiFi (Attempt %d)...", reconnectAttempts + 1);
-        lastReconnectAttempt = currentMillis;
-
-        if (attemptConnection())
+        const unsigned long currentMillis = millis();
+        if (currentMillis - lastReconnectAttempt > reconnectInterval)
         {
-            LOG_INFO("Reconnected successfully! IP: %s", WiFi.localIP().toString().c_str());
-            reconnectAttempts = 0;
-            return true;
-        }
+            LOG_INFO("Attempting to connect to WiFi (Attempt %d)...", reconnectAttempts + 1);
+            lastReconnectAttempt = currentMillis;
 
-        LOG_WARN("Reconnect attempt failed.");
-        reconnectAttempts++;
+            if (attemptConnection())
+            {
+                LOG_INFO("Connected successfully! IP: %s", WiFi.localIP().toString().c_str());
+                reconnectAttempts = 0;
+
+                return true;
+            }
+
+            LOG_WARN("Connection attempt failed.");
+            reconnectAttempts++;
+        }
     }
 
     return false;
