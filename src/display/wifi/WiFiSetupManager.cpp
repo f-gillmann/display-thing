@@ -194,14 +194,22 @@ bool WiFiSetupManager::connect()
 
 void WiFiSetupManager::handleClient() const
 {
-    displayThing.getDnsServer().processNextRequest();
-    displayThing.getWebServer().handleClient();
+    if (WiFi.getMode() == WIFI_AP || WiFi.getMode() == WIFI_AP_STA)
+    {
+        displayThing.getDnsServer().processNextRequest();
+        displayThing.getWebServer().handleClient();
+    }
 }
 
 bool WiFiSetupManager::manageConnection()
 {
+    auto& preferences = displayThing.getPreferences();
+    preferences.begin(PREFERENCES_WIFI_CONFIG, true);
+    const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
+    preferences.end();
+
     // we have no credentials or failed to reconnect too many times
-    if (WiFi.SSID() == "" || reconnectAttempts >= maxReconnectAttempts)
+    if (!hasCredentials || reconnectAttempts >= maxReconnectAttempts)
     {
         if (reconnectAttempts >= maxReconnectAttempts)
         {
@@ -209,12 +217,16 @@ bool WiFiSetupManager::manageConnection()
                 "Failed to reconnect after %d attempts. Starting configuration portal.", maxReconnectAttempts
             );
 
-            startAP();
+            // only display the screen once and keep it from changing passwords over and over again
+            if (WiFi.getMode() != WIFI_AP && WiFi.getMode() != WIFI_AP_STA)
+            {
+                startAP();
 
-            std::string ap_password = getAPPassword();
-            std::string ap_ssid = getAPSsid();
-            const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
-            reconnectScreen->show(displayThing);
+                std::string ap_password = getAPPassword();
+                std::string ap_ssid = getAPSsid();
+                const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
+                reconnectScreen->show(displayThing);
+            }
 
             reconnectAttempts = 0;
         }

@@ -98,15 +98,23 @@ void WiFiReconnectScreen::show(DisplayThing& displayThing)
         display.setCursor(margin, 180);
         display.print("Could not connect to the saved");
         display.setCursor(margin, 205);
-        display.print("WiFi network.");
+        display.print("WiFi network. Please follow these");
+        display.setCursor(margin, 230);
+        display.print("steps to reconnect/reconfigure:");
 
         display.setCursor(margin, 280);
-        display.print("Please use the details on the right");
-        display.setCursor(margin, 305);
-        display.print("to re-configure the device.");
-
+        display.print("1. Connect to this WiFi network:");
         display.setFont(&FreeSansBold12pt7b);
-        display.setCursor(margin + 25, 365);
+        display.setCursor(margin + 25, 310);
+        display.print(access_point_ssid.c_str());
+        display.setFont(&FreeSans12pt7b);
+
+        display.setCursor(margin, 345);
+        display.print("2. A 'Setup' page should open");
+        display.setCursor(margin + 25, 375);
+        display.print("automatically. If not, visit:");
+        display.setFont(&FreeSansBold12pt7b);
+        display.setCursor(margin + 25, 405);
         display.print("http://");
         display.print(ACCESS_POINT_IP);
 
