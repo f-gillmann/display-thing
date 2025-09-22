@@ -5,6 +5,7 @@
 #include "util.hpp"
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
+#include "display/screens/wifi_reconnect/WiFiReconnectScreen.h"
 #include "display/screens/wifi_setup/WiFiSetupScreen.h"
 #include "display/time/TimeManager.h"
 #include "display/wifi/WiFiSetupManager.h"
@@ -94,17 +95,30 @@ void setup()
 
 void loop()
 {
-    if (isConnected)
+    if (WiFiClass::status() == WL_CONNECTED)
     {
+        if (!isConnected)
+        {
+            LOG_INFO("WiFi connection re-established. Restarting network services.");
+            isConnected = true;
+
+            // re-initialize network services and time manager
+            timeManager->begin();
+            displayThing->getWebServer().begin();
+
+            // force an immediate screen update on reconnect
+            lastUpdate = 0;
+            lastMinute = -1;
+        }
+
         // handle requests for config page
         displayThing->getWebServer().handleClient();
-
-        const DeviceConfig& currentConfig = configManager->getConfig();
-        const unsigned int current_duration = displayManager->getCurrentModuleDuration(currentConfig);
 
         // update time
         ntpClient.update();
 
+        const DeviceConfig& currentConfig = configManager->getConfig();
+        const unsigned int current_duration = displayManager->getCurrentModuleDuration(currentConfig);
         const unsigned long currentMillis = millis();
         const int currentMinute = ntpClient.getMinutes();
 
@@ -135,7 +149,16 @@ void loop()
     }
     else
     {
-        // handle Wi-Fi captive portal
-        wifiSetupManager->handleClient();
+        if (isConnected)
+        {
+            LOG_WARN("WiFi connection lost. Stopping network services.");
+            isConnected = false;
+
+            // stop all network services
+            timeManager->end();
+            displayThing->getWebServer().stop();
+        }
+
+        wifiSetupManager->manageConnection();
     }
 }

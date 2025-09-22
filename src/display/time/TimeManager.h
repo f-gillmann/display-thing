@@ -10,6 +10,7 @@ class TimeManager
 public:
     TimeManager(NTPClient& time_client, ConfigurationManager& config_manager);
     void begin() const;
+    void end() const;
     NTPClient& getTimeClient() const;
 
 private:

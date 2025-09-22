@@ -1,21 +1,26 @@
 #pragma once
 
-#include "DisplayThing.h"
 #include <string>
+#include "DisplayThing.h"
 
 class WiFiSetupManager
 {
 public:
     explicit WiFiSetupManager(DisplayThing& displayThing);
-    bool connect();
-    void handleClient() const;
     std::string getAPPassword() const;
     std::string getAPSsid() const;
+    void startAP();
+    bool connect();
+    void handleClient() const;
+    bool manageConnection();
 
 private:
-    void startAP();
-
+    bool attemptConnection() const;
     DisplayThing& displayThing;
     std::string access_point_password;
     std::string access_point_ssid;
+    unsigned long lastReconnectAttempt = 0;
+    int reconnectAttempts = 0;
+    static constexpr long reconnectInterval = 10000;
+    static constexpr int maxReconnectAttempts = 3;
 };

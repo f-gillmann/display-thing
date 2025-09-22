@@ -1,11 +1,11 @@
 #include "WiFiSetupManager.h"
-
 #include <WiFi.h>
 #include "display/web/wifi_setup_portal.html.h"
 #include <vector>
 #include <algorithm>
-
 #include "Logger.hpp"
+#include "util.hpp"
+#include "display/screens/wifi_reconnect/WiFiReconnectScreen.h"
 
 static std::string generateRandomSSID()
 {
@@ -19,8 +19,6 @@ static std::string generateRandomSSID()
     const int word2 = random(0, static_cast<int>(words.size()));
 
     std::string ssid = words[word1] + "-" + words[word2];
-
-    // ensure lowercase, just in case
     std::transform(ssid.begin(), ssid.end(), ssid.begin(), ::tolower);
 
     return ssid;
@@ -45,8 +43,8 @@ void WiFiSetupManager::startAP()
     access_point_password = String(random(10000000, 100000000)).c_str();
     access_point_ssid = generateRandomSSID();
 
-    LOG_INFO("AP SSID: %s\n", access_point_ssid.c_str());
-    LOG_INFO("AP Password: %s\n", access_point_password.c_str());
+    LOG_INFO("AP SSID: %s", access_point_ssid.c_str());
+    LOG_INFO("AP Password: %s", access_point_password.c_str());
 
     WiFiClass::mode(WIFI_AP);
     WiFi.softAP(access_point_ssid.c_str(), access_point_password.c_str(), 1, false, 1);
@@ -155,11 +153,11 @@ void WiFiSetupManager::startAP()
     server.begin();
 }
 
-bool WiFiSetupManager::connect()
+bool WiFiSetupManager::attemptConnection() const
 {
     WiFiClass::mode(WIFI_STA);
     auto& preferences = displayThing.getPreferences();
-    preferences.begin(PREFERENCES_WIFI_CONFIG, false);
+    preferences.begin(PREFERENCES_WIFI_CONFIG, true);
 
     const String ssid = preferences.getString("ssid", "");
     const String password = preferences.getString("password", "");
@@ -177,10 +175,17 @@ bool WiFiSetupManager::connect()
             attempts++;
         }
 
-        if (WiFiClass::status() == WL_CONNECTED)
-        {
-            return true;
-        }
+        return WiFiClass::status() == WL_CONNECTED;
+    }
+
+    return false;
+}
+
+bool WiFiSetupManager::connect()
+{
+    if (attemptConnection())
+    {
+        return true;
     }
 
     startAP();
@@ -191,4 +196,50 @@ void WiFiSetupManager::handleClient() const
 {
     displayThing.getDnsServer().processNextRequest();
     displayThing.getWebServer().handleClient();
+}
+
+bool WiFiSetupManager::manageConnection()
+{
+    // we have no credentials or failed to reconnect too many times
+    if (WiFi.SSID() == "" || reconnectAttempts >= maxReconnectAttempts)
+    {
+        if (reconnectAttempts >= maxReconnectAttempts)
+        {
+            LOG_ERROR(
+                "Failed to reconnect after %d attempts. Starting configuration portal.", maxReconnectAttempts
+            );
+
+            startAP();
+
+            std::string ap_password = getAPPassword();
+            std::string ap_ssid = getAPSsid();
+            const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
+            reconnectScreen->show(displayThing);
+
+            reconnectAttempts = 0;
+        }
+
+        handleClient();
+        return false;
+    }
+
+    // we have credentials but are currently disconnected - try to reconnect
+    const unsigned long currentMillis = millis();
+    if (currentMillis - lastReconnectAttempt > reconnectInterval)
+    {
+        LOG_INFO("Attempting to reconnect to WiFi (Attempt %d)...", reconnectAttempts + 1);
+        lastReconnectAttempt = currentMillis;
+
+        if (attemptConnection())
+        {
+            LOG_INFO("Reconnected successfully! IP: %s", WiFi.localIP().toString().c_str());
+            reconnectAttempts = 0;
+            return true;
+        }
+
+        LOG_WARN("Reconnect attempt failed.");
+        reconnectAttempts++;
+    }
+
+    return false;
 }

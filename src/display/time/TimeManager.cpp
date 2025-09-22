@@ -9,14 +9,22 @@ TimeManager::TimeManager(NTPClient& time_client, ConfigurationManager& config_ma
 
 void TimeManager::begin() const
 {
-    m_configManager.onConfigChanged([this](const DeviceConfig& config) {
-        this->handleConfigChange(config);
-    });
+    m_configManager.onConfigChanged(
+        [this](const DeviceConfig& config)
+        {
+            this->handleConfigChange(config);
+        }
+    );
 
     const DeviceConfig& currentConfig = m_configManager.getConfig();
     handleConfigChange(currentConfig);
 
     m_timeClient.begin();
+}
+
+void TimeManager::end() const
+{
+    m_timeClient.end();
 }
 
 NTPClient& TimeManager::getTimeClient() const
