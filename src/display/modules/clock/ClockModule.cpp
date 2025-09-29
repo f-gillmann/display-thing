@@ -3,8 +3,7 @@
 #include "Fonts/FreeSans9pt7b.h"
 #include "Fonts/FreeSansBold12pt7b.h"
 #include "Fonts/FreeSansBold24pt7b.h"
-
-void drawCenteredString(DisplayThing& displayThing, const char* text, const GFXfont* font, int y);
+#include "../ModuleHelpers.h"
 
 ClockModule::ClockModule(TimeManager& timeManager)
     : m_timeManager(timeManager)
@@ -71,7 +70,7 @@ void ClockModule::show(DisplayThing& displayThing)
                 display.setFont(&FreeSansBold12pt7b);
                 display.getTextBounds(am_pm, 0, 0, &x1, &y1, &w_ampm, &h_ampm);
 
-                constexpr int padding = 5;
+                constexpr int padding = 10;
                 const int total_width = w_time + padding + w_ampm;
                 const int start_x = (display.width() - total_width) / 2;
 
@@ -85,10 +84,10 @@ void ClockModule::show(DisplayThing& displayThing)
             }
             else
             {
-                drawCenteredString(displayThing, m_timeString, &FreeSansBold24pt7b, time_y);
+                drawCenteredString(displayThing, m_timeString, &FreeSansBold24pt7b, 0, time_y, true, false);
             }
 
-            drawCenteredString(displayThing, m_dateString, &FreeSansBold12pt7b, date_y);
+            drawCenteredString(displayThing, m_dateString, &FreeSansBold12pt7b, 0, date_y, true, false);
 
             char tz_str[12];
             const long offset_sec = m_config.time_offset;
@@ -96,26 +95,12 @@ void ClockModule::show(DisplayThing& displayThing)
             const int minutes = offset_sec % 3600 / 60;
 
             snprintf(tz_str, sizeof(tz_str), "UTC%+03d:%02d", hours, abs(minutes));
-            drawCenteredString(displayThing, tz_str, &FreeSans9pt7b, timezone_y);
+            drawCenteredString(displayThing, tz_str, &FreeSans9pt7b, 0, timezone_y, true, false);
         }
         else
         {
-            drawCenteredString(displayThing, "Waiting for time sync...", &FreeSansBold12pt7b, 80);
+            drawCenteredString(displayThing, "Waiting for time sync...", &FreeSansBold12pt7b, 0, 80, true, false);
         }
     }
     while (display.nextPage());
-}
-
-void drawCenteredString(DisplayThing& displayThing, const char* text, const GFXfont* font, const int y)
-{
-    auto& display = displayThing.getDisplay();
-    int16_t x1, y1;
-    uint16_t w, h;
-
-    display.setFont(font);
-    display.getTextBounds(text, 0, static_cast<int16_t>(y), &x1, &y1, &w, &h);
-
-    const int x = (display.width() - w) / 2;
-    display.setCursor(static_cast<int16_t>(x), static_cast<int16_t>(y));
-    display.print(text);
 }

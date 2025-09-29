@@ -112,7 +112,8 @@ void loop()
         const unsigned long currentMillis = millis();
         const int currentMinute = ntpClient.getMinutes();
 
-        // main loop for our modules
+        // update current module if the current modules duration has been reached
+        // or if we forced a refresh by setting lastUpdate to 0
         if (currentMillis - lastUpdate > current_duration || lastUpdate == 0)
         {
             // show next module
@@ -127,9 +128,9 @@ void loop()
             lastUpdate = currentMillis;
             displayThing->getDisplay().hibernate();
         }
+        // update current module, only do it if the module duration is above a minute
         else if (currentMinute != lastMinute && current_duration > 60000)
         {
-            // update current module, only do it if the module duration is above a minute
             displayManager->updateCurrentModule();
             displayManager->showCurrentModule();
 
