@@ -117,7 +117,7 @@ void ConfigurationManager::registerHandlers()
     auto& preferences = displayThing.getPreferences();
 
     server.on(
-        "/", HTTP_GET, [&]()
+        "/", HTTP_GET, [&]
         {
             server.sendHeader("Content-Encoding", "gzip");
             server.send_P(
@@ -128,7 +128,7 @@ void ConfigurationManager::registerHandlers()
     );
 
     server.on(
-        "/save_config", HTTP_POST, [&]()
+        "/save_config", HTTP_POST, [&]
         {
             if (!preferences.begin(PREFERENCES_DEVICE_CONFIG))
             {
@@ -201,7 +201,7 @@ void ConfigurationManager::registerHandlers()
     );
 
     server.on(
-        "/get_config", HTTP_GET, [&]()
+        "/get_config", HTTP_GET, [&]
         {
             const DeviceConfig& cfg = getConfig();
             JsonDocument doc;
@@ -231,14 +231,14 @@ void ConfigurationManager::registerHandlers()
     );
 
     server.on(
-        "/favicon.ico", [&]()
+        "/favicon.ico", [&]
         {
             server.send(204);
         }
     );
 
     server.onNotFound(
-        [&]()
+        [&]
         {
             server.send(404, "text/plain", "Not found");
         }

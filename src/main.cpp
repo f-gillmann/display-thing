@@ -5,8 +5,6 @@
 #include "util.hpp"
 #include "display/configuration/ConfigurationManager.h"
 #include "display/DisplayManager.h"
-#include "display/screens/wifi_reconnect/WiFiReconnectScreen.h"
-#include "display/screens/wifi_setup/WiFiSetupScreen.h"
 #include "display/time/TimeManager.h"
 #include "display/wifi/WiFiSetupManager.h"
 

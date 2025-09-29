@@ -20,7 +20,7 @@ static std::string generateRandomSSID()
     const int word2 = random(0, static_cast<int>(words.size()));
 
     std::string ssid = words[word1] + "-" + words[word2];
-    std::transform(ssid.begin(), ssid.end(), ssid.begin(), ::tolower);
+    std::transform(ssid.begin(), ssid.end(), ssid.begin(), tolower);
 
     return ssid;
 }
@@ -58,7 +58,7 @@ void WiFiSetupManager::startAP()
     dnsServer.start(53, "*", ACCESS_POINT_IP);
 
     server.on(
-        "/", HTTP_GET, [&]()
+        "/", HTTP_GET, [&]
         {
             server.sendHeader("Content-Encoding", "gzip");
             server.send_P(
@@ -69,7 +69,7 @@ void WiFiSetupManager::startAP()
     );
 
     server.on(
-        "/scan", HTTP_GET, [&]()
+        "/scan", HTTP_GET, [&]
         {
             const int networks = WiFi.scanNetworks();
             String json = "[";
@@ -91,7 +91,7 @@ void WiFiSetupManager::startAP()
     );
 
     server.on(
-        "/save", HTTP_POST, [&]()
+        "/save", HTTP_POST, [&]
         {
             if (!preferences.begin(PREFERENCES_WIFI_CONFIG))
             {
@@ -134,14 +134,14 @@ void WiFiSetupManager::startAP()
     );
 
     server.on(
-        "/favicon.ico", [&]()
+        "/favicon.ico", [&]
         {
             server.send(204);
         }
     );
 
     server.onNotFound(
-        [&]()
+        [&]
         {
             server.sendHeader("Content-Encoding", "gzip");
             server.send_P(
@@ -209,7 +209,7 @@ bool WiFiSetupManager::connect()
 
 void WiFiSetupManager::handleClient() const
 {
-    if (WiFi.getMode() == WIFI_AP)
+    if (WiFiClass::getMode() == WIFI_AP)
     {
         displayThing.getDnsServer().processNextRequest();
         displayThing.getWebServer().handleClient();
@@ -224,7 +224,7 @@ bool WiFiSetupManager::manageConnection()
     preferences.end();
 
     // start AP if needed
-    if ((!hasCredentials || reconnectAttempts >= maxReconnectAttempts) && WiFi.getMode() != WIFI_AP)
+    if ((!hasCredentials || reconnectAttempts >= maxReconnectAttempts) && WiFiClass::getMode() != WIFI_AP)
     {
         LOG_INFO("Starting configuration portal");
         startAP();
@@ -239,7 +239,7 @@ bool WiFiSetupManager::manageConnection()
     handleClient();
 
     // try reconnection if we have credentials
-    if (hasCredentials && WiFi.getMode() != WIFI_AP)
+    if (hasCredentials && WiFiClass::getMode() != WIFI_AP)
     {
         const unsigned long currentMillis = millis();
         if (currentMillis - lastReconnectAttempt > reconnectInterval)

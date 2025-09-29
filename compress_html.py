@@ -24,7 +24,7 @@ def compress_web_files(source, target, env):
         f_out.write(f"const uint8_t {var_name}_GZ[] PROGMEM = {{\n  ")
         f_out.write(", ".join([f"0x{b:02x}" for b in compressed]))
         f_out.write("\n};\n")
-        f_out.write(f"const size_t {var_name}_GZ_LEN = {len(compressed)};\n")
+        f_out.write(f"constexpr size_t {var_name}_GZ_LEN = {len(compressed)};\n")
 
 env.Append(BUILDERS={"Compress": Builder(action=compress_web_files)})
 

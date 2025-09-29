@@ -16,10 +16,10 @@ struct DeviceConfig
 {
     String units;
     String clock_format;
-    int time_offset;
+    int time_offset{};
     String timezone;
-    float weather_lat;
-    float weather_lon;
+    float weather_lat{};
+    float weather_lon{};
     String weather_service;
     String weather_apikey;
     std::vector<QueueItem> queue;

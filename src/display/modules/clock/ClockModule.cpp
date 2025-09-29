@@ -7,7 +7,7 @@
 void drawCenteredString(DisplayThing& displayThing, const char* text, const GFXfont* font, int y);
 
 ClockModule::ClockModule(TimeManager& timeManager)
-    : m_timeManager(timeManager), m_config()
+    : m_timeManager(timeManager)
 {
 }
 
@@ -20,7 +20,7 @@ void ClockModule::update()
 {
     const NTPClient& ntpClient = m_timeManager.getTimeClient();
 
-    // check if the unix epoch time is recent, indicating a successful sync.
+    // check if the unix epoch time is recent, indicating a successful sync (probably).
     // (1757800000 = Sat Sep 13 2025 21:46:40 GMT+0000).
     if (ntpClient.getEpochTime() > 1757800000L)
     {
@@ -30,7 +30,7 @@ void ClockModule::update()
         const auto raw_time = static_cast<time_t>(ntpClient.getEpochTime());
         m_timeInfo = *gmtime(&raw_time);
 
-        const char* time_fmt = (m_config.clock_format == "12") ? "%I:%M" : "%H:%M";
+        const char* time_fmt = m_config.clock_format == "12" ? "%I:%M" : "%H:%M";
         strftime(m_timeString, sizeof(m_timeString), time_fmt, &m_timeInfo);
         strftime(m_dateString, sizeof(m_dateString), "%A, %B %d", &m_timeInfo);
     }
@@ -93,7 +93,7 @@ void ClockModule::show(DisplayThing& displayThing)
             char tz_str[12];
             const long offset_sec = m_config.time_offset;
             const int hours = offset_sec / 3600;
-            const int minutes = (offset_sec % 3600) / 60;
+            const int minutes = offset_sec % 3600 / 60;
 
             snprintf(tz_str, sizeof(tz_str), "UTC%+03d:%02d", hours, abs(minutes));
             drawCenteredString(displayThing, tz_str, &FreeSans9pt7b, timezone_y);

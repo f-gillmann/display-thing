@@ -1021,7 +1021,7 @@
             const option = document.createElement('option');
             option.value = tzInfo.name;
             option.textContent = tzInfo.label;
-            option.dataset.offset = tzInfo.offset;
+            option.dataset.offset = tzInfo.offset.toString();
             timezoneSelect.appendChild(option);
         });
 

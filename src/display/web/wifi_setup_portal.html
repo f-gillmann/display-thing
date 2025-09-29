@@ -174,7 +174,7 @@
                     } else {
                         data.sort((a, b) => b.rssi - a.rssi);
                         data.forEach(net => {
-                            var opt = document.createElement('option');
+                            let opt = document.createElement('option');
                             opt.value = net.ssid;
                             opt.textContent = `${net.ssid} (${net.rssi} dBm)`;
                             select.appendChild(opt);
