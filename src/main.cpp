@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <nvs_flash.h>
 #include "config.h"
 #include "DisplayThing.h"
 #include "Logger.hpp"
@@ -32,6 +33,17 @@ void setup()
 #ifndef DISABLE_DEBUG
     Logger.begin(Serial, LogLevel::DEBUG);
 #endif
+
+    // Initialize NVS flash for Preferences
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        // NVS partition was truncated and needs to be erased
+        LOG_WARN("NVS flash init failed, erasing...");
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
 
     displayThing = make_unique<DisplayThing>();
     wifiSetupManager = make_unique<WiFiSetupManager>(*displayThing);

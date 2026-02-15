@@ -1,22 +1,20 @@
 import glob
 import gzip
 import os
-from htmlmin.minify import html_minify
 
 Import("env")
 
 def compress_web_files(source, target, env):
-    """Minifies, then compresses a file and formats it as a C++ byte array."""
+    """Compresses a file and formats it as a C++ byte array."""
     source_path = str(source[0])
     target_path = str(target[0])
 
-    print(f"Minifying and compressing {source_path} to {target_path}")
+    print(f"Compressing {source_path} to {target_path}")
 
     with open(source_path, "r") as f_in:
         content = f_in.read()
 
-    minified_content = html_minify(content)
-    compressed = gzip.compress(minified_content.encode("utf-8"), compresslevel=9)
+    compressed = gzip.compress(content.encode("utf-8"), compresslevel=9)
     var_name = os.path.basename(source_path).upper().replace('.', '_').replace('-', '_')
 
     with open(target_path, "w") as f_out:

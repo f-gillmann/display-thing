@@ -41,13 +41,15 @@ std::string WiFiSetupManager::getAPSsid() const
 
 void WiFiSetupManager::startAP()
 {
+    apModeStarted = true;
     access_point_password = String(random(10000000, 100000000)).c_str();
     access_point_ssid = generateRandomSSID();
 
     LOG_INFO("AP SSID: %s", access_point_ssid.c_str());
     LOG_INFO("AP Password: %s", access_point_password.c_str());
 
-    WiFiClass::mode(WIFI_AP);
+    // Use AP_STA mode to allow WiFi scanning without disrupting the AP
+    WiFiClass::mode(WIFI_AP_STA);
     WiFi.softAP(access_point_ssid.c_str(), access_point_password.c_str(), 1, false, 1);
     WiFi.softAPConfig(ACCESS_POINT_IP, ACCESS_POINT_IP, IPAddress(255, 255, 255, 0));
 
@@ -71,7 +73,8 @@ void WiFiSetupManager::startAP()
     server.on(
         "/scan", HTTP_GET, [&]
         {
-            const int networks = WiFi.scanNetworks();
+            // Scan for networks without switching modes
+            const int networks = WiFi.scanNetworks(false, false);
             String json = "[";
 
             if (networks > 0)
@@ -81,6 +84,15 @@ void WiFiSetupManager::startAP()
                     if (network > 0) json += ",";
                     json += R"({"ssid":")" + WiFi.SSID(network) + R"(","rssi":)" + String(WiFi.RSSI(network)) + "}";
                 }
+            }
+            else if (networks == 0)
+            {
+                // No networks found is OK
+            }
+            else
+            {
+                // Scan failed
+                LOG_ERROR("WiFi scan failed with error code: %d", networks);
             }
 
             json += "]";
@@ -154,11 +166,32 @@ void WiFiSetupManager::startAP()
     server.begin();
 }
 
+bool WiFiSetupManager::hasStoredCredentials() const
+{
+    auto& preferences = displayThing.getPreferences();
+    
+    // Try to open in read-only mode - if it fails, namespace doesn't exist
+    if (!preferences.begin(PREFERENCES_WIFI_CONFIG, true))
+    {
+        return false;
+    }
+
+    const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
+    preferences.end();
+    
+    return hasCredentials;
+}
+
 bool WiFiSetupManager::attemptConnection() const
 {
     WiFiClass::mode(WIFI_STA);
     auto& preferences = displayThing.getPreferences();
-    preferences.begin(PREFERENCES_WIFI_CONFIG, true);
+    
+    // Try to open in read-only mode - if it fails, namespace doesn't exist (no credentials saved)
+    if (!preferences.begin(PREFERENCES_WIFI_CONFIG, true))
+    {
+        return false;
+    }
 
     const String ssid = preferences.getString("ssid", "");
     const String password = preferences.getString("password", "");
@@ -184,32 +217,34 @@ bool WiFiSetupManager::attemptConnection() const
 
 bool WiFiSetupManager::connect()
 {
-    auto& preferences = displayThing.getPreferences();
-    preferences.begin(PREFERENCES_WIFI_CONFIG, true);
-    const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
-    preferences.end();
-
     if (attemptConnection())
     {
         return true;
     }
 
+    const bool hasCredentials = hasStoredCredentials();
+
     if (!hasCredentials) {
+        startAP();
+
         std::string ap_ssid = getAPSsid();
         std::string ap_password = getAPPassword();
 
         const auto setupScreen = make_unique<WiFiSetupScreen>(ap_ssid, ap_password);
         setupScreen->show(displayThing);
     }
-
-    startAP();
+    else
+    {
+        startAP();
+    }
 
     return false;
 }
 
 void WiFiSetupManager::handleClient() const
 {
-    if (WiFiClass::getMode() == WIFI_AP)
+    const wifi_mode_t currentMode = WiFiClass::getMode();
+    if (currentMode == WIFI_AP || currentMode == WIFI_AP_STA)
     {
         displayThing.getDnsServer().processNextRequest();
         displayThing.getWebServer().handleClient();
@@ -218,28 +253,31 @@ void WiFiSetupManager::handleClient() const
 
 bool WiFiSetupManager::manageConnection()
 {
-    auto& preferences = displayThing.getPreferences();
-    preferences.begin(PREFERENCES_WIFI_CONFIG, true);
-    const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
-    preferences.end();
-
-    // start AP if needed
-    if ((!hasCredentials || reconnectAttempts >= maxReconnectAttempts) && WiFiClass::getMode() != WIFI_AP)
+    const wifi_mode_t currentMode = WiFiClass::getMode();
+    const bool isAPActive = (currentMode == WIFI_AP || currentMode == WIFI_AP_STA);
+    
+    // start AP if needed - only check credentials once when we need to start AP
+    if (!apModeStarted && !isAPActive)
     {
-        LOG_INFO("Starting configuration portal");
-        startAP();
+        const bool hasCredentials = hasStoredCredentials();
+        
+        if (!hasCredentials || reconnectAttempts >= maxReconnectAttempts)
+        {
+            LOG_INFO("Starting configuration portal");
+            startAP();
 
-        std::string ap_ssid = getAPSsid();
-        std::string ap_password = getAPPassword();
+            std::string ap_ssid = getAPSsid();
+            std::string ap_password = getAPPassword();
 
-        const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
-        reconnectScreen->show(displayThing);
+            const auto reconnectScreen = make_unique<WiFiReconnectScreen>(ap_ssid, ap_password);
+            reconnectScreen->show(displayThing);
+        }
     }
 
     handleClient();
 
-    // try reconnection if we have credentials
-    if (hasCredentials && WiFiClass::getMode() != WIFI_AP)
+    // Only try reconnection if we're not in AP configuration mode
+    if (!apModeStarted)
     {
         const unsigned long currentMillis = millis();
         if (currentMillis - lastReconnectAttempt > reconnectInterval)

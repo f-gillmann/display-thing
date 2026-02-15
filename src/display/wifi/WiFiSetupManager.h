@@ -16,11 +16,13 @@ public:
 
 private:
     bool attemptConnection() const;
+    bool hasStoredCredentials() const;
     DisplayThing& displayThing;
     std::string access_point_password;
     std::string access_point_ssid;
     unsigned long lastReconnectAttempt = 0;
     int reconnectAttempts = 0;
+    bool apModeStarted = false;
     static constexpr long reconnectInterval = 10000;
     static constexpr int maxReconnectAttempts = 3;
 };
