@@ -10,7 +10,11 @@ public:
 
     void setConfig(const DeviceConfig& deviceConfig) override;
     void update() override;
-    void show(DisplayThing& displayThing) override;
+    bool needsFrequentUpdates() const override;
+    unsigned long getUpdateInterval() const override;
+
+protected:
+    void drawContent(DisplayThing& displayThing, bool usePartialUpdate) override;
 
 private:
     TimeManager& m_timeManager;

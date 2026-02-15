@@ -169,7 +169,7 @@ void WiFiSetupManager::startAP()
 bool WiFiSetupManager::hasStoredCredentials() const
 {
     auto& preferences = displayThing.getPreferences();
-    
+
     // Try to open in read-only mode - if it fails, namespace doesn't exist
     if (!preferences.begin(PREFERENCES_WIFI_CONFIG, true))
     {
@@ -178,7 +178,7 @@ bool WiFiSetupManager::hasStoredCredentials() const
 
     const bool hasCredentials = preferences.getString("ssid", "").length() > 0;
     preferences.end();
-    
+
     return hasCredentials;
 }
 
@@ -186,7 +186,7 @@ bool WiFiSetupManager::attemptConnection() const
 {
     WiFiClass::mode(WIFI_STA);
     auto& preferences = displayThing.getPreferences();
-    
+
     // Try to open in read-only mode - if it fails, namespace doesn't exist (no credentials saved)
     if (!preferences.begin(PREFERENCES_WIFI_CONFIG, true))
     {
@@ -224,7 +224,8 @@ bool WiFiSetupManager::connect()
 
     const bool hasCredentials = hasStoredCredentials();
 
-    if (!hasCredentials) {
+    if (!hasCredentials)
+    {
         startAP();
 
         std::string ap_ssid = getAPSsid();
@@ -255,12 +256,12 @@ bool WiFiSetupManager::manageConnection()
 {
     const wifi_mode_t currentMode = WiFiClass::getMode();
     const bool isAPActive = (currentMode == WIFI_AP || currentMode == WIFI_AP_STA);
-    
+
     // start AP if needed - only check credentials once when we need to start AP
     if (!apModeStarted && !isAPActive)
     {
         const bool hasCredentials = hasStoredCredentials();
-        
+
         if (!hasCredentials || reconnectAttempts >= maxReconnectAttempts)
         {
             LOG_INFO("Starting configuration portal");

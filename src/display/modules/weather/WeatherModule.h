@@ -3,12 +3,15 @@
 #include "display/modules/Module.h"
 #include "display/services/wheater/WheaterService.h"
 
-class WeatherModule final : public Module {
+class WeatherModule final : public Module
+{
 public:
     explicit WeatherModule();
-    void show(DisplayThing& displayThing) override;
     void setConfig(const DeviceConfig& deviceConfig) override;
     void update() override;
+
+protected:
+    void drawContent(DisplayThing& displayThing, bool usePartialUpdate) override;
 
 private:
     DeviceConfig m_config;

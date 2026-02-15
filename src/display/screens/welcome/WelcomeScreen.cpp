@@ -1,8 +1,5 @@
 #include "WelcomeScreen.h"
-
-#include <Fonts/FreeSansBold9pt7b.h>
-#include <Fonts/FreeSansBold12pt7b.h>
-#include <Fonts/FreeSans9pt7b.h>
+#include "fonts/fonts.h"
 
 WelcomeScreen::WelcomeScreen() = default;
 
@@ -20,11 +17,11 @@ void WelcomeScreen::show(DisplayThing& displayThing)
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
 
-        display.setFont(&FreeSansBold12pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setCursor(10, 30);
         display.print("DisplayThing Ready!");
 
-        display.setFont(&FreeSans9pt7b);
+        display.setFont(&FreeMonoBold9pt7b);
         display.setCursor(10, 60);
         display.print("The module queue is empty.");
         display.setCursor(10, 80);
@@ -33,7 +30,7 @@ void WelcomeScreen::show(DisplayThing& displayThing)
         display.setCursor(10, 120);
         display.print("Visit its IP address to access the configuration panel:");
         display.setCursor(10, 140);
-        display.setFont(&FreeSansBold9pt7b);
+        display.setFont(&FreeMonoBold9pt7b);
         display.print(WiFi.localIP().toString());
     }
     while (display.nextPage());

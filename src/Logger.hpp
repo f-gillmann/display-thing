@@ -4,7 +4,8 @@
 #include <cstdarg>
 #include <cstring>
 
-enum class LogLevel {
+enum class LogLevel
+{
     NONE = 0,
     ERROR = 1,
     WARN = 2,
@@ -12,34 +13,41 @@ enum class LogLevel {
     DEBUG = 4
 };
 
-class LoggerClass {
+class LoggerClass
+{
 public:
-    void begin(Stream &output, const LogLevel level = LogLevel::DEBUG) {
+    void begin(Stream& output, const LogLevel level = LogLevel::DEBUG)
+    {
         _output = &output;
         _logLevel = level;
     }
 
-    void setLevel(const LogLevel level) {
+    void setLevel(const LogLevel level)
+    {
         _logLevel = level;
     }
 
-    template<typename... Args>
-    void error(const char* file, int line, const char* format, Args... args) {
+    template <typename... Args>
+    void error(const char* file, int line, const char* format, Args... args)
+    {
         print(LogLevel::ERROR, "ERROR", file, line, format, args...);
     }
 
-    template<typename... Args>
-    void warn(const char* file, int line, const char* format, Args... args) {
+    template <typename... Args>
+    void warn(const char* file, int line, const char* format, Args... args)
+    {
         print(LogLevel::WARN, "WARN ", file, line, format, args...);
     }
 
-    template<typename... Args>
-    void info(const char* file, int line, const char* format, Args... args) {
+    template <typename... Args>
+    void info(const char* file, int line, const char* format, Args... args)
+    {
         print(LogLevel::INFO, "INFO ", file, line, format, args...);
     }
 
-    template<typename... Args>
-    void debug(const char* file, int line, const char* format, Args... args) {
+    template <typename... Args>
+    void debug(const char* file, int line, const char* format, Args... args)
+    {
         print(LogLevel::DEBUG, "DEBUG", file, line, format, args...);
     }
 
@@ -48,9 +56,12 @@ private:
     LogLevel _logLevel = LogLevel::NONE;
     static constexpr int LOG_BUFFER_SIZE = 256;
 
-    template<typename... Args>
-    void print(const LogLevel level, const char* levelStr, const char* file, const int line, const char* format, Args... args) {
-        if (level <= _logLevel && _output) {
+    template <typename... Args>
+    void print(const LogLevel level, const char* levelStr, const char* file, const int line, const char* format,
+               Args... args)
+    {
+        if (level <= _logLevel && _output)
+        {
             char buffer[LOG_BUFFER_SIZE];
 
             const char* short_file = strrchr(file, '/');

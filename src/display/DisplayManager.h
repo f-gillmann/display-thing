@@ -7,14 +7,19 @@
 
 class DisplayThing;
 
-class DisplayManager {
+class DisplayManager
+{
 public:
     explicit DisplayManager(DisplayThing& displayThing, TimeManager& timeManager);
     void showCurrentModule() const;
+    void showCurrentModuleFirstTime() const;
+    void forceFullRefresh() const;
     void updateCurrentModule() const;
     void goToNextModule(const DeviceConfig& deviceConfig);
     void buildQueue(const DeviceConfig& deviceConfig);
     unsigned int getCurrentModuleDuration(const DeviceConfig& deviceConfig) const;
+    bool currentModuleNeedsFrequentUpdates() const;
+    unsigned long getCurrentModuleUpdateInterval() const;
 
 private:
     std::unique_ptr<Screen> createModule(const std::string& name) const;

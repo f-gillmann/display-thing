@@ -99,6 +99,57 @@
             font-weight: 500;
         }
 
+        small {
+            font-size: 0.875rem;
+        }
+
+        input[type='checkbox'] {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid var(--surface2);
+            border-radius: 4px;
+            background-color: var(--surface0);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+
+        input[type='checkbox']:hover {
+            border-color: var(--blue);
+            background-color: var(--surface1);
+        }
+
+        input[type='checkbox']:checked {
+            background-color: var(--blue);
+            border-color: var(--blue);
+        }
+
+        input[type='checkbox']:checked::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid var(--crust);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        input[type='checkbox']:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(138, 173, 244, 0.3);
+        }
+
+        input[type='checkbox']:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         input[type='text'],
         input[type='number'],
         select {
@@ -692,13 +743,47 @@
                     <select id="timezone_select" name="timezone"></select>
                     <input type="hidden" id="time_offset" name="time_offset">
                 </div>
+                <div class="form-group">
+                    <label for="full-refresh-interval">Full Refresh Interval (minutes)</label>
+                    <input type="number" id="full-refresh-interval" name="full_refresh_interval" value="60" min="0"
+                           placeholder="0 = disabled">
+                    <small style="color: var(--subtext0); display: block; margin-top: 0.5rem;">
+                        Periodic full screen refresh to prevent ghosting (0 to disable)
+                    </small>
+                </div>
             </div>
             <div class="page" id="clock">
                 <h2>Clock Module</h2>
                 <p class="page-description">
-                    The clock module displays the current time. You can customize the time format in the global
-                    settings.
+                    Customize the appearance of the clock module.
                 </p>
+                <div class="form-group">
+                    <label for="clock-size">Clock Size</label>
+                    <select id="clock-size" name="clock_size">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                        <option value="xl">Extra Large</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Display Options</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="clock-show-seconds" name="clock_show_seconds" value="true">
+                            <span>Show Seconds</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="clock-show-date" name="clock_show_date" value="true" checked>
+                            <span>Show Date</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="clock-show-timezone" name="clock_show_timezone" value="true"
+                                   checked>
+                            <span>Show Timezone</span>
+                        </label>
+                    </div>
+                </div>
             </div>
             <div class="page" id="weather">
                 <h2>Weather Module</h2>
@@ -1099,6 +1184,32 @@
                 if (serviceSelect) {
                     serviceSelect.value = cfg.settings.weather_service;
                     serviceSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            if (cfg.settings.hasOwnProperty('clock_size')) {
+                const clockSizeSelect = document.getElementById('clock-size');
+                if (clockSizeSelect) {
+                    clockSizeSelect.value = cfg.settings.clock_size;
+                }
+            }
+
+            if (cfg.settings.hasOwnProperty('clock_show_seconds')) {
+                document.getElementById('clock-show-seconds').checked = cfg.settings.clock_show_seconds;
+            }
+
+            if (cfg.settings.hasOwnProperty('clock_show_date')) {
+                document.getElementById('clock-show-date').checked = cfg.settings.clock_show_date;
+            }
+
+            if (cfg.settings.hasOwnProperty('clock_show_timezone')) {
+                document.getElementById('clock-show-timezone').checked = cfg.settings.clock_show_timezone;
+            }
+
+            if (cfg.settings.hasOwnProperty('full_refresh_interval')) {
+                const fullRefreshInput = document.getElementById('full-refresh-interval');
+                if (fullRefreshInput) {
+                    fullRefreshInput.value = cfg.settings.full_refresh_interval;
                 }
             }
         }

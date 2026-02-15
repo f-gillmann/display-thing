@@ -2,11 +2,7 @@
 
 #include <qrcode.h>
 #include <utility>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSansBold12pt7b.h>
-#include <Fonts/FreeSansBold9pt7b.h>
-
+#include "fonts/fonts.h"
 #include "Logger.hpp"
 #include "display/DisplayManager.h"
 
@@ -83,7 +79,7 @@ void WiFiReconnectScreen::show(DisplayThing& displayThing)
 
         // title
         constexpr auto title = "No Connection";
-        display.setFont(&FreeSansBold12pt7b);
+        display.setFont(&FreeMonoBold18pt7b);
         display.setTextSize(2);
         int16_t x1, y1;
         uint16_t w, h;
@@ -92,7 +88,7 @@ void WiFiReconnectScreen::show(DisplayThing& displayThing)
         display.print(title);
 
         // information on the left side
-        display.setFont(&FreeSans12pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setTextSize(1);
 
         display.setCursor(margin, 180);
@@ -104,16 +100,16 @@ void WiFiReconnectScreen::show(DisplayThing& displayThing)
 
         display.setCursor(margin, 280);
         display.print("1. Connect to this WiFi network:");
-        display.setFont(&FreeSansBold12pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setCursor(margin + 25, 310);
         display.print(access_point_ssid.c_str());
-        display.setFont(&FreeSans12pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
 
         display.setCursor(margin, 345);
         display.print("2. A 'Setup' page should open");
         display.setCursor(margin + 25, 375);
         display.print("automatically. If not, visit:");
-        display.setFont(&FreeSansBold12pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setCursor(margin + 25, 405);
         display.print("http://");
         display.print(ACCESS_POINT_IP);
@@ -124,7 +120,8 @@ void WiFiReconnectScreen::show(DisplayThing& displayThing)
 
         g_current_display = &display;
 
-        String network_payload = "WIFI:T:WPA;S:" + String(access_point_ssid.c_str()) + ";P:" + access_point_password.c_str() + ";;";
+        String network_payload = "WIFI:T:WPA;S:" + String(access_point_ssid.c_str()) + ";P:" + access_point_password.
+            c_str() + ";;";
         const esp_err_t qrcode_error = esp_qrcode_generate(&qrcode_config, network_payload.c_str());
 
         g_current_display = nullptr;
@@ -138,18 +135,18 @@ void WiFiReconnectScreen::show(DisplayThing& displayThing)
         const auto wifi_credentials_x = static_cast<int16_t>(center_x + 75);
         auto wifi_credentials_y = static_cast<int16_t>(display.height() - 75);
 
-        display.setFont(&FreeSans9pt7b);
+        display.setFont(&FreeMonoBold9pt7b);
         display.setCursor(wifi_credentials_x, wifi_credentials_y);
         display.print("Network: ");
-        display.setFont(&FreeSansBold9pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setCursor(static_cast<int16_t>(wifi_credentials_x + 100), wifi_credentials_y);
         display.print(access_point_ssid.c_str());
 
         wifi_credentials_y += 35;
-        display.setFont(&FreeSans9pt7b);
+        display.setFont(&FreeMonoBold9pt7b);
         display.setCursor(wifi_credentials_x, wifi_credentials_y);
         display.print("Password: ");
-        display.setFont(&FreeSansBold9pt7b);
+        display.setFont(&FreeMonoBold12pt7b);
         display.setCursor(static_cast<int16_t>(wifi_credentials_x + 100), wifi_credentials_y);
         display.print(access_point_password.c_str());
     }

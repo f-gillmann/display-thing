@@ -4,8 +4,7 @@
 #include "util.hpp"
 #include "display/services/wheater/OpenMeteoService.h"
 #include "display/services/wheater/OpenWeatherMapService.h"
-#include "Fonts/FreeSans9pt7b.h"
-#include "Fonts/FreeSansBold12pt7b.h"
+#include "fonts/fonts.h"
 
 std::unique_ptr<WeatherService> createWeatherService(const std::string& serviceName)
 {
@@ -26,9 +25,9 @@ WeatherModule::WeatherModule() = default;
 void WeatherModule::setConfig(const DeviceConfig& deviceConfig)
 {
     m_config = deviceConfig;
-    m_weatherService = createWeatherService(m_config.weather_service.c_str());
+    m_weatherService = createWeatherService(m_config.modules.weather.service.c_str());
 
-    if (m_config.weather_lat != 0.0f && m_config.weather_lon != 0.0f)
+    if (m_config.modules.weather.lat != 0.0f && m_config.modules.weather.lon != 0.0f)
     {
         m_isConfigured = true;
     }
@@ -44,29 +43,44 @@ void WeatherModule::update()
 
     LOG_INFO("Updating weather data...");
     m_weatherData = m_weatherService->fetchWeatherData(
-        m_config.weather_lat,
-        m_config.weather_lon,
-        m_config.weather_apikey.c_str(),
+        m_config.modules.weather.lat,
+        m_config.modules.weather.lon,
+        m_config.modules.weather.apikey.c_str(),
         m_config.units.c_str()
     );
 }
 
-void WeatherModule::show(DisplayThing& displayThing) {
+void WeatherModule::drawContent(DisplayThing& displayThing, bool usePartialUpdate)
+{
     auto& display = displayThing.getDisplay();
-    display.setFullWindow();
+
+    if (usePartialUpdate)
+    {
+        // Partial update - no black flash
+        display.setPartialWindow(0, 0, display.width(), display.height());
+    }
+    else
+    {
+        // Full refresh on first show
+        display.setFullWindow();
+    }
+
     display.firstPage();
 
-    do {
+    do
+    {
         display.fillScreen(GxEPD_WHITE);
         display.setTextColor(GxEPD_BLACK);
 
-        if (m_isConfigured) {
-            if (m_weatherData.success) {
-                display.setFont(&FreeSansBold12pt7b);
+        if (m_isConfigured)
+        {
+            if (m_weatherData.success)
+            {
+                display.setFont(&FreeMonoBold12pt7b);
                 display.setCursor(10, 30);
                 display.print("Current Weather");
 
-                display.setFont(&FreeSans9pt7b);
+                display.setFont(&FreeMonoBold9pt7b);
                 display.setCursor(10, 60);
                 display.print("Temperature: ");
                 display.print(m_weatherData.temperature, 1);
@@ -75,25 +89,30 @@ void WeatherModule::show(DisplayThing& displayThing) {
                 display.setCursor(10, 80);
                 display.print("Condition Code: ");
                 display.print(m_weatherData.weather_code);
-            } else {
-                display.setFont(&FreeSansBold12pt7b);
+            }
+            else
+            {
+                display.setFont(&FreeMonoBold12pt7b);
                 display.setCursor(10, 30);
                 display.print("Weather Data Error");
 
-                display.setFont(&FreeSans9pt7b);
+                display.setFont(&FreeMonoBold9pt7b);
                 display.setCursor(10, 60);
                 display.print("Could not fetch weather data.");
             }
-        } else {
-            display.setFont(&FreeSansBold12pt7b);
+        }
+        else
+        {
+            display.setFont(&FreeMonoBold12pt7b);
             display.setCursor(10, 30);
             display.print("Weather Module Not Configured");
 
-            display.setFont(&FreeSans9pt7b);
+            display.setFont(&FreeMonoBold9pt7b);
             display.setCursor(10, 60);
             display.print("Please set your latitude and longitude");
             display.setCursor(10, 80);
             display.print("in the web configuration portal.");
         }
-    } while (display.nextPage());
+    }
+    while (display.nextPage());
 }

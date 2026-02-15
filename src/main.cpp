@@ -17,6 +17,8 @@ std::unique_ptr<TimeManager> timeManager;
 
 bool isConnected = false;
 unsigned long lastUpdate = 0;
+unsigned long lastFrequentUpdate = 0;
+unsigned long lastFullRefresh = 0;
 int lastMinute = -1;
 
 WiFiUDP ntpUDP;
@@ -62,9 +64,11 @@ void setup()
             displayManager->buildQueue(newConfig);
 
             displayManager->updateCurrentModule();
-            displayManager->showCurrentModule();
+            displayManager->showCurrentModuleFirstTime();
 
             lastUpdate = millis();
+            lastFrequentUpdate = millis();
+            lastFullRefresh = millis();
             displayThing->getDisplay().hibernate();
         }
     );
@@ -110,6 +114,8 @@ void loop()
 
             // force an immediate screen update on reconnect
             lastUpdate = 0;
+            lastFrequentUpdate = 0;
+            lastFullRefresh = 0;
             lastMinute = -1;
         }
 
@@ -124,6 +130,22 @@ void loop()
         const unsigned long currentMillis = millis();
         const int currentMinute = ntpClient.getMinutes();
 
+        const bool needsFrequentUpdates = displayManager->currentModuleNeedsFrequentUpdates();
+        const unsigned long updateInterval = displayManager->getCurrentModuleUpdateInterval();
+        const unsigned int fullRefreshInterval = currentConfig.full_refresh_interval;
+        const bool needsFullRefresh = fullRefreshInterval > 0 && (currentMillis - lastFullRefresh) >= (
+            fullRefreshInterval * 60000UL);
+
+        if (needsFullRefresh)
+        {
+            LOG_INFO("Performing periodic full refresh (interval: %u minutes)", fullRefreshInterval);
+            displayManager->updateCurrentModule();
+            displayManager->forceFullRefresh();
+
+            lastFullRefresh = currentMillis;
+            displayThing->getDisplay().hibernate();
+        }
+
         // update current module if the current modules duration has been reached
         // or if we forced a refresh by setting lastUpdate to 0
         if (currentMillis - lastUpdate > current_duration || lastUpdate == 0)
@@ -135,16 +157,27 @@ void loop()
             }
 
             displayManager->updateCurrentModule();
-            displayManager->showCurrentModule();
+            displayManager->showCurrentModuleFirstTime(); // fully refresh when switching modules
 
             lastUpdate = currentMillis;
+            lastFrequentUpdate = currentMillis;
+            lastFullRefresh = currentMillis;
+            displayThing->getDisplay().hibernate();
+        }
+        // handle frequent updates for modules
+        else if (needsFrequentUpdates && currentMillis - lastFrequentUpdate >= updateInterval)
+        {
+            displayManager->updateCurrentModule();
+            displayManager->showCurrentModule(); // partial update to avoid black flash
+
+            lastFrequentUpdate = currentMillis;
             displayThing->getDisplay().hibernate();
         }
         // update current module, only do it if the module duration is above a minute
-        else if (currentMinute != lastMinute && current_duration > 60000)
+        else if (currentMinute != lastMinute && current_duration > 60000 && !needsFrequentUpdates)
         {
             displayManager->updateCurrentModule();
-            displayManager->showCurrentModule();
+            displayManager->showCurrentModule(); // partial update to avoid black flash
 
             lastMinute = currentMinute;
             displayThing->getDisplay().hibernate();

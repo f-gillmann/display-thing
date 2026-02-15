@@ -36,12 +36,19 @@ void ConfigurationManager::loadConfiguration()
     m_config.clock_format = preferences.getString("cl_fo", "24"); // clock_format
     m_config.time_offset = preferences.getInt("toff", 0); // time_offset
     m_config.timezone = preferences.getString("tz", "Europe/Berlin"); // timezone
+    m_config.full_refresh_interval = preferences.getUInt("fr_int", 60); // full_refresh_interval
 
-    // load weather settings
-    m_config.weather_lat = preferences.getFloat("w_lat", 51.16f); // weather_lat
-    m_config.weather_lon = preferences.getFloat("w_lon", 10.45f); // weather_lon
-    m_config.weather_service = preferences.getString("w_svc", "openmeteo"); // weather_service
-    m_config.weather_apikey = preferences.getString("w_key", ""); // weather_apikey
+    // load clock module settings
+    m_config.modules.clock.size = preferences.getString("cl_sz", "medium"); // clock_size
+    m_config.modules.clock.show_seconds = preferences.getBool("cl_sec", false); // clock_show_seconds
+    m_config.modules.clock.show_date = preferences.getBool("cl_dat", true); // clock_show_date
+    m_config.modules.clock.show_timezone = preferences.getBool("cl_tz", true); // clock_show_timezone
+
+    // load weather module settings
+    m_config.modules.weather.lat = preferences.getFloat("w_lat", 51.16f); // weather_lat
+    m_config.modules.weather.lon = preferences.getFloat("w_lon", 10.45f); // weather_lon
+    m_config.modules.weather.service = preferences.getString("w_svc", "openmeteo"); // weather_service
+    m_config.modules.weather.apikey = preferences.getString("w_key", ""); // weather_apikey
 
     m_config.queue.clear();
     const int queueSize = preferences.getInt("q_size", 0);
@@ -81,12 +88,19 @@ void ConfigurationManager::logConfiguration() const
     Serial.printf("  Clock Format: %s\n", m_config.clock_format.c_str());
     Serial.printf("  Time Offset: %i\n", m_config.time_offset);
     Serial.printf("  Timezone: %s\n", m_config.timezone.c_str());
+    Serial.printf("  Full Refresh Interval: %u minutes\n", m_config.full_refresh_interval);
 
-    Serial.println(F("\n[Weather]"));
-    Serial.printf("  Latitude: %f\n", m_config.weather_lat);
-    Serial.printf("  Longitude: %f\n", m_config.weather_lon);
-    Serial.printf("  Service: %s\n", m_config.weather_service.c_str());
-    Serial.printf("  API Key: %s\n", m_config.weather_apikey.isEmpty() ? "Not Set" : "Set");
+    Serial.println(F("\n[Clock Module]"));
+    Serial.printf("  Size: %s\n", m_config.modules.clock.size.c_str());
+    Serial.printf("  Show Seconds: %s\n", m_config.modules.clock.show_seconds ? "Yes" : "No");
+    Serial.printf("  Show Date: %s\n", m_config.modules.clock.show_date ? "Yes" : "No");
+    Serial.printf("  Show Timezone: %s\n", m_config.modules.clock.show_timezone ? "Yes" : "No");
+
+    Serial.println(F("\n[Weather Module]"));
+    Serial.printf("  Latitude: %f\n", m_config.modules.weather.lat);
+    Serial.printf("  Longitude: %f\n", m_config.modules.weather.lon);
+    Serial.printf("  Service: %s\n", m_config.modules.weather.service.c_str());
+    Serial.printf("  API Key: %s\n", m_config.modules.weather.apikey.isEmpty() ? "Not Set" : "Set");
 
     Serial.println(F("\n[Queue Items]"));
 
@@ -155,6 +169,12 @@ void ConfigurationManager::registerHandlers()
             preferences.putString("cl_fo", server.arg("clock_format").c_str()); // clock_format
             preferences.putInt("toff", time_offset); // time_offset
             preferences.putString("tz", server.arg("timezone").c_str());
+            preferences.putUInt("fr_int", server.arg("full_refresh_interval").toInt()); // full_refresh_interval
+
+            preferences.putString("cl_sz", server.arg("clock_size")); // clock_size
+            preferences.putBool("cl_sec", server.arg("clock_show_seconds") == "true"); // clock_show_seconds
+            preferences.putBool("cl_dat", server.arg("clock_show_date") == "true"); // clock_show_date
+            preferences.putBool("cl_tz", server.arg("clock_show_timezone") == "true"); // clock_show_timezone
 
             preferences.putFloat("w_lat", server.arg("weather_lat").toFloat()); // weather_lat
             preferences.putFloat("w_lon", server.arg("weather_lon").toFloat()); // weather_lon
@@ -211,10 +231,15 @@ void ConfigurationManager::registerHandlers()
             settings["clock_format"] = cfg.clock_format;
             settings["time_offset"] = cfg.time_offset;
             settings["timezone"] = cfg.timezone;
-            settings["weather_lat"] = cfg.weather_lat;
-            settings["weather_lon"] = cfg.weather_lon;
-            settings["weather_service"] = cfg.weather_service;
-            settings["weather_apikey"] = cfg.weather_apikey;
+            settings["full_refresh_interval"] = cfg.full_refresh_interval;
+            settings["clock_size"] = cfg.modules.clock.size;
+            settings["clock_show_seconds"] = cfg.modules.clock.show_seconds;
+            settings["clock_show_date"] = cfg.modules.clock.show_date;
+            settings["clock_show_timezone"] = cfg.modules.clock.show_timezone;
+            settings["weather_lat"] = cfg.modules.weather.lat;
+            settings["weather_lon"] = cfg.modules.weather.lon;
+            settings["weather_service"] = cfg.modules.weather.service;
+            settings["weather_apikey"] = cfg.modules.weather.apikey;
 
             const JsonArray queue = doc["queue"].to<JsonArray>();
             for (const auto& item : cfg.queue)

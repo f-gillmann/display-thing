@@ -45,12 +45,47 @@ void DisplayManager::showCurrentModule() const
     }
 }
 
+void DisplayManager::showCurrentModuleFirstTime() const
+{
+    if (m_current_module_index != -1 && !m_module_queue.empty())
+    {
+        m_module_queue[m_current_module_index]->onFirstShow(displayThing);
+    }
+}
+
+void DisplayManager::forceFullRefresh() const
+{
+    if (m_current_module_index != -1 && !m_module_queue.empty())
+    {
+        // Force a full refresh by calling onFirstShow, which uses setFullWindow
+        m_module_queue[m_current_module_index]->onFirstShow(displayThing);
+    }
+}
+
 void DisplayManager::updateCurrentModule() const
 {
     if (m_current_module_index != -1 && !m_module_queue.empty())
     {
         m_module_queue[m_current_module_index]->update();
     }
+}
+
+bool DisplayManager::currentModuleNeedsFrequentUpdates() const
+{
+    if (m_current_module_index != -1 && !m_module_queue.empty())
+    {
+        return m_module_queue[m_current_module_index]->needsFrequentUpdates();
+    }
+    return false;
+}
+
+unsigned long DisplayManager::getCurrentModuleUpdateInterval() const
+{
+    if (m_current_module_index != -1 && !m_module_queue.empty())
+    {
+        return m_module_queue[m_current_module_index]->getUpdateInterval();
+    }
+    return 60000; // Default: 1 minute
 }
 
 void DisplayManager::goToNextModule(const DeviceConfig& deviceConfig)
@@ -85,7 +120,7 @@ std::unique_ptr<Screen> DisplayManager::createModule(const std::string& name) co
     if (name == "weather")
         return make_unique<WeatherModule>();
     if (name == "clock")
-            return make_unique<ClockModule>(m_timeManager);
+        return make_unique<ClockModule>(m_timeManager);
 
     return nullptr;
 }

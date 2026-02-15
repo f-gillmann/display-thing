@@ -12,16 +12,36 @@ struct QueueItem
     unsigned int duration;
 };
 
+struct ClockModuleConfig
+{
+    String size;
+    bool show_seconds{};
+    bool show_date{};
+    bool show_timezone{};
+};
+
+struct WeatherModuleConfig
+{
+    float lat{};
+    float lon{};
+    String service;
+    String apikey;
+};
+
+struct ModulesConfig
+{
+    ClockModuleConfig clock;
+    WeatherModuleConfig weather;
+};
+
 struct DeviceConfig
 {
     String units;
     String clock_format;
     int time_offset{};
     String timezone;
-    float weather_lat{};
-    float weather_lon{};
-    String weather_service;
-    String weather_apikey;
+    unsigned int full_refresh_interval{}; // Minutes between full refreshes (0 = disabled)
+    ModulesConfig modules;
     std::vector<QueueItem> queue;
 };
 
